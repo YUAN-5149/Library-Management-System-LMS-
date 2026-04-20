@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>溫書閣 Library System</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Noto+Serif+TC:wght@400;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}html,body,#root{height:100%;font-family:'Noto Serif TC',serif}
+.app{display:flex;height:100vh;overflow:hidden;background:#FFFBF5}
+.sb{width:218px;flex-shrink:0;background:linear-gradient(160deg,#FCEABB,#FAD27A 20%,#F8BC55 40%,#F5A830 60%,#FBCF72);display:flex;flex-direction:column;overflow:hidden;box-shadow:3px 0 12px rgba(200,140,20,0.18)}
+.sbl{padding:16px 14px 11px;border-bottom:1px solid rgba(255,255,255,0.55)}
+.sbl h1{font-family:'Playfair Display',serif;font-size:18px;color:#3B1E00;font-weight:700}
+.sbl p{font-size:9px;color:rgba(59,30,0,0.55);margin-top:3px;letter-spacing:2px;text-transform:uppercase}
+.nav{padding:4px 0;flex:1;overflow-y:auto}
+.nlbl{padding:7px 12px 2px;font-size:8px;font-weight:800;letter-spacing:2px;color:rgba(59,30,0,0.44);text-transform:uppercase;display:flex;align-items:center;justify-content:space-between}
+.ndiv{margin:4px 9px;height:1px;background:rgba(255,255,255,0.6)}
+.ni{display:flex;align-items:center;gap:7px;padding:8px 12px;color:rgba(59,30,0,0.80);cursor:pointer;border-left:3px solid transparent;transition:all 0.14s;font-size:12px;user-select:none}
+.ni:hover{background:rgba(255,255,255,0.5);color:#3B1E00;border-left-color:rgba(59,30,0,0.4)}
+.ni.on{background:rgba(255,255,255,0.65);color:#3B1E00;border-left-color:#9A5A00;font-weight:600}
+.sbf{padding:9px 12px;border-top:1px solid rgba(255,255,255,0.5);color:rgba(59,30,0,0.65);font-size:10px;line-height:1.8}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.hdr{background:#fff;padding:10px 18px;border-bottom:1px solid #FDBA74;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.hdr h2{font-family:'Playfair Display',serif;font-size:17px;color:#431407;font-weight:700;display:flex;align-items:center;gap:7px}
+.hdr p{font-size:10px;color:#9A3412;margin-top:2px}
+.body{flex:1;overflow-y:auto;padding:14px 16px}
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:13px}
+.sc{background:#fff;border-radius:10px;padding:12px;border:1px solid #FDBA74;position:relative;overflow:hidden}
+.sc::after{content:'';position:absolute;top:0;right:0;width:32px;height:32px;background:#FFF7ED;border-radius:0 10px 0 32px}
+.si{font-size:14px;margin-bottom:3px;color:#C98060}.sv{font-size:19px;font-weight:700;color:#B87050;font-family:'Playfair Display',serif}.sl{font-size:10px;color:#9A3412}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.card{background:#fff;border-radius:10px;padding:12px;border:1px solid #FDBA74}
+.ch{font-family:'Playfair Display',serif;font-size:12px;color:#431407;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid #FED7AA}
+.tabs{display:flex;gap:5px;margin-bottom:10px}
+.tab{padding:5px 10px;border-radius:6px;border:none;cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;background:#FFF7ED;color:#9A3412}
+.tab.on{background:#B87050;color:#fff}
+.tc{background:#fff;border-radius:10px;border:1px solid #FDBA74;overflow:hidden}
+table{width:100%;border-collapse:collapse}
+th{background:#FFF7ED;padding:6px 8px;text-align:left;font-size:10px;color:#9A3412;font-weight:600;border-bottom:1px solid #FDBA74}
+td{padding:5px 8px;font-size:11px;border-bottom:1px solid #FFF3E0;vertical-align:middle}
+tr:last-child td{border-bottom:none}tr:hover td{background:#FFF7ED}
+.fg{display:flex;flex-direction:column;gap:2px;margin-bottom:7px}.fg label{font-size:11px;font-weight:600;color:#9A3412}
+input,select,textarea{padding:5px 8px;border:1.5px solid #FDBA74;border-radius:6px;font-size:12px;font-family:inherit;background:#FFF7ED;color:#431407;outline:none;width:100%}
+input:focus,select:focus{border-color:#B87050;background:#fff}
+.sbar{display:flex;gap:6px;margin-bottom:6px;align-items:center;flex-wrap:wrap}
+.siw{position:relative;flex:1;min-width:140px}.siw input{padding-left:22px}
+.sii{position:absolute;left:7px;top:50%;transform:translateY(-50%);color:#C98060;font-size:11px;pointer-events:none}
+.ov{position:fixed;inset:0;background:rgba(60,18,5,0.48);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px}
+.om{background:#fff;border-radius:13px;padding:18px;width:420px;max-width:95vw;max-height:90vh;overflow-y:auto;border:1px solid #FDBA74}
+.om h3{font-family:'Playfair Display',serif;font-size:14px;color:#431407;margin-bottom:9px}
+.tw{position:fixed;top:11px;right:11px;z-index:500;display:flex;flex-direction:column;gap:5px}
+.tst{background:#431407;color:#fff;padding:7px 10px;border-radius:7px;font-size:12px;animation:ti 0.2s ease;max-width:210px}
+@keyframes ti{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:translateX(0)}}
+.aw{padding:6px 8px;background:#FEF3C7;border-radius:6px;font-size:11px;color:#92400E;border:1px solid #FCD34D}
+.app.dk{background:#18100A}.app.dk .main,.app.dk .body{background:#18100A}
+.app.dk .hdr{background:#231508;border-color:#3A2010;box-shadow:none}
+.app.dk .hdr h2{color:#F0D5A5}.app.dk .hdr p{color:#A07848}
+.app.dk .card,.app.dk .tc,.app.dk .sc,.app.dk .om{background:#231508;border-color:#3A2010}
+.app.dk .ch{color:#F0D5A5;border-bottom-color:#3A2010}
+.app.dk th{background:#2B1808;color:#B09060;border-color:#3A2010}
+.app.dk td{color:#C8A880;border-color:#2B1808}.app.dk tr:hover td{background:#2B1808}
+.app.dk .sc::after{background:#2B1808}.app.dk .sv{color:#F5C060}
+.app.dk .sl,.app.dk .si{color:#B09060}
+.app.dk .tab{background:#2B1808;color:#B09060}.app.dk .tab.on{background:#B87050;color:#fff}
+.app.dk input,.app.dk select,.app.dk textarea{background:#2B1808;border-color:#3A2010;color:#F0D5A5}
+.app.dk input:focus,.app.dk select:focus{border-color:#B87050;background:#321A08}
+.app.dk .fg label,.app.dk .sii{color:#B09060}
+.app.dk .aw{background:#2B1808;border-color:#5A3010;color:#EFC060}
+.app.dk .nlbl{color:rgba(240,213,165,0.44)}.app.dk .ndiv{background:rgba(255,255,255,0.12)}
+.app.dk .ni{color:rgba(240,213,165,0.75)}
+.app.dk .ni:hover{background:rgba(255,255,255,0.08);color:#F0D5A5;border-left-color:rgba(240,213,165,0.4)}
+.app.dk .ni.on{background:rgba(255,255,255,0.14);color:#F0D5A5;border-left-color:#D4A060}
+.app.dk .sbf{color:rgba(240,213,165,0.65);border-top-color:rgba(255,255,255,0.12)}
+.app.dk .tst{background:#3D2810}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useMemo,useRef,useEffect}=React;
+const AID="8200",APW="8200";
+const CATS=["消防叢書類","緊急救護類","運動健身類","水域救生類","災害搶救類","建築類","NFPA類","英文類","消防設備類","消防法規類","論文報告類","中文期刊類","政府出版品類","簡體中文類"];
+const KOD={"消防叢書類":"FP","緊急救護類":"EA","運動健身類":"SF","水域救生類":"WL","災害搶救類":"DR","建築類":"A","NFPA類":"NF","英文類":"E","消防設備類":"FE","消防法規類":"FR","論文報告類":"TR","中文期刊類":"CJ","政府出版品類":"GP","簡體中文類":"SC"};
+const CLR={"消防叢書類":"#DC2626","緊急救護類":"#EA580C","運動健身類":"#16A34A","水域救生類":"#2563EB","災害搶救類":"#D97706","建築類":"#0891B2","NFPA類":"#B45309","英文類":"#0D9488","消防設備類":"#C2410C","消防法規類":"#4338CA","論文報告類":"#475569","中文期刊類":"#BE185D","政府出版品類":"#059669","簡體中文類":"#0F766E"};
+const CND={全新:"#D1FAE5|#065F46",良好:"#FEF3C7|#92400E",普通:"#DBEAFE|#1E40AF",破損:"#FEE2E2|#991B1B","—":"#F3F4F6|#6B7280"};
+const gc=b=>CLR[b.category]||"#B87050";
+const gk=b=>KOD[b.category]||"?";
+const cs=c=>{const[a,b]=(CND[c]||"#F3F4F6|#6B7280").split("|");return{background:a,color:b};};
+
+const BK=[
+  {id:1,title:"消防安全實務手冊",author:"內政部消防署",category:"消防叢書類",isbn:"9789011001231",type:"physical",status:"available",condition:"良好",addedDate:"2024-01-10",publishYear:"2023",desc:"消防安全基礎知識與規範。",views:128,cover:""},
+  {id:2,title:"消防工程概論",author:"林金宏",category:"消防叢書類",isbn:"9789011002341",type:"physical",status:"borrowed",condition:"良好",addedDate:"2024-01-12",publishYear:"2022",desc:"消防工程設計與施工基礎。",views:87,cover:""},
+  {id:3,title:"急救處置手冊",author:"衛生福利部",category:"緊急救護類",isbn:"9789012001122",type:"physical",status:"available",condition:"普通",addedDate:"2024-01-15",publishYear:"2023",desc:"ACLS緊急急救標準流程。",views:213,cover:""},
+  {id:4,title:"消防員體能訓練指南",author:"體能訓練委員會",category:"運動健身類",isbn:"9789013001234",type:"physical",status:"borrowed",condition:"良好",addedDate:"2024-02-01",publishYear:"2022",desc:"消防員專項體能訓練計畫。",views:94,cover:""},
+  {id:5,title:"NFPA 1 Fire Code 2021",author:"NFPA",category:"NFPA類",isbn:"NFPA-1-2021",type:"physical",status:"available",condition:"全新",addedDate:"2024-03-03",publishYear:"2021",desc:"美國消防法規第1號。",views:167,cover:""},
+  {id:6,title:"消防設備士考試重點整理",author:"張志勇",category:"消防設備類",isbn:"9789025001234",type:"physical",status:"available",condition:"良好",addedDate:"2024-03-20",publishYear:"2023",desc:"消防設備士考試備考用書。",views:344,cover:""},
+  {id:7,title:"消防救災研究報告 2023",author:"消防研究中心",category:"論文報告類",isbn:"EB-TR-001",type:"ebook",status:"available",condition:"—",addedDate:"2024-01-05",publishYear:"2023",desc:"2023年消防救災技術研究彙編。",views:312,cover:""},
+  {id:8,title:"消防月刊合訂本 2023",author:"消防署",category:"中文期刊類",isbn:"EB-CJ-001",type:"ebook",status:"available",condition:"—",addedDate:"2024-02-01",publishYear:"2023",desc:"2023年度消防月刊合訂本。",views:205,cover:""},
+];
+const MB=[
+  {id:1,name:"王大明",email:"wang@fire.gov.tw",phone:"0912-345-678",joinDate:"2024-01-01"},
+  {id:2,name:"李志豪",email:"li@fire.gov.tw",phone:"0923-456-789",joinDate:"2024-01-15"},
+  {id:3,name:"張建國",email:"zhang@fire.gov.tw",phone:"0934-567-890",joinDate:"2024-02-01"},
+  {id:4,name:"陳淑芬",email:"chen@fire.gov.tw",phone:"0945-678-901",joinDate:"2024-02-10"},
+];
+const BR0=[
+  {id:1,bookId:2,memberId:1,cid:"2_1",borrowDate:"2024-03-10",dueDate:"2024-03-24",returnDate:null,status:"overdue"},
+  {id:2,bookId:4,memberId:2,cid:"4_1",borrowDate:"2024-04-01",dueDate:"2026-04-28",returnDate:null,status:"active"},
+  {id:3,bookId:3,memberId:3,cid:"3_2",borrowDate:"2024-04-10",dueDate:"2026-04-26",returnDate:null,status:"active"},
+  {id:4,bookId:1,memberId:2,cid:"1_1",borrowDate:"2024-02-01",dueDate:"2024-02-15",returnDate:"2024-02-14",status:"returned"},
+];
+const initCp=()=>{
+  const m={};
+  BK.forEach(b=>{if(b.type==="physical")m[b.id]=[{cid:b.id+"_1",label:"第1冊",cond:b.condition,status:b.status}];});
+  m[3]=[{cid:"3_1",label:"第1冊",cond:"普通",status:"borrowed"},{cid:"3_2",label:"第2冊",cond:"良好",status:"available"}];
+  m[6]=[{cid:"6_1",label:"第1冊",cond:"良好",status:"available"},{cid:"6_2",label:"第2冊",cond:"良好",status:"available"},{cid:"6_3",label:"第3冊",cond:"普通",status:"available"}];
+  return m;
+};
+
+const NAV_P=[{id:"overview",icon:"◈",label:"館藏總覽"},{id:"catalog",icon:"≡",label:"書目管理"},{id:"ebooks",icon:"□",label:"電子書目"},{id:"categories",icon:"◉",label:"分類管理"},{id:"newbooks",icon:"🆕",label:"新書上架"},{id:"picks",icon:"🎲",label:"隨機推薦"},{id:"myrecord",icon:"📋",label:"我的紀錄"},{id:"ratings",icon:"⭐",label:"書目評分"}];
+const NAV_A=[{id:"borrow",icon:"↗",label:"借閱管理"},{id:"remind",icon:"🔔",label:"到期提醒"},{id:"report",icon:"📊",label:"月度報表"},{id:"add",icon:"+",label:"新增書目"},{id:"import",icon:"⬇",label:"批量匯入"},{id:"qr",icon:"▣",label:"QR 產生器"},{id:"members",icon:"◎",label:"會員管理"}];
+
+function Cover({book,w=40,h=56,onClick}){
+  const c=gc(book),k=gk(book),t=book.title||"",u="v"+book.id;
+  if(book.cover)return<img src={book.cover} alt="" onClick={onClick} style={{width:w,height:h,objectFit:"cover",borderRadius:3,flexShrink:0,cursor:"pointer"}}/>;
+  return(
+    <svg width={w} height={h} viewBox="0 0 60 84" onClick={onClick} style={{borderRadius:3,flexShrink:0,cursor:onClick?"pointer":"default",display:"block"}}>
+      <defs>
+        <linearGradient id={"s"+u} x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="rgba(0,0,0,0.35)"/><stop offset="18%" stopColor="rgba(0,0,0,0)"/></linearGradient>
+        <linearGradient id={"g"+u} x1="0" y1="0" x2="0" y2="1"><stop offset="60%" stopColor="rgba(0,0,0,0)"/><stop offset="100%" stopColor="rgba(0,0,0,0.28)"/></linearGradient>
+      </defs>
+      <rect width="60" height="84" rx="3" fill={c}/><rect width="60" height="84" rx="3" fill={"url(#g"+u+")"}/><rect width="60" height="84" rx="3" fill={"url(#s"+u+")"}/>
+      <rect x="9" y="9" width="42" height="52" rx="2" fill="rgba(255,255,255,0.1)"/>
+      <text x="30" y="30" textAnchor="middle" dominantBaseline="middle" fill="rgba(255,255,255,0.95)" fontSize="16" fontWeight="bold" fontFamily="serif">{t[0]||"書"}{t[1]||""}</text>
+      <text x="30" y="50" textAnchor="middle" dominantBaseline="middle" fill="rgba(255,255,255,0.6)" fontSize="7.5" fontFamily="monospace">{k}</text>
+      {book.type==="ebook"&&<><rect x="16" y="71" width="28" height="8" rx="2" fill="rgba(255,255,255,0.28)"/><text x="30" y="75.5" textAnchor="middle" dominantBaseline="middle" fill="rgba(255,255,255,0.9)" fontSize="4.5">E-BOOK</text></>}
+    </svg>
+  );
+}
+const Tag=({c,s})=><span style={{display:"inline-block",padding:"3px 7px",borderRadius:18,fontSize:10,fontWeight:600,...s}}>{c}</span>;
+const Btn=({c,onClick,v,sm,disabled,s})=>{
+  const V={p:{background:"#B87050",color:"#fff"},o:{background:"transparent",border:"2px solid #B87050",color:"#B87050"},g:{background:"#10B981",color:"#fff"},r:{background:"#EF4444",color:"#fff"},y:{background:"#D97706",color:"#fff"}};
+  return<button onClick={onClick} disabled={disabled} style={{padding:sm?"4px 9px":"7px 13px",borderRadius:6,border:"none",cursor:disabled?"not-allowed":"pointer",fontSize:sm?11:12,fontFamily:"inherit",fontWeight:600,opacity:disabled?0.5:1,...(V[v||"p"]),...s}}>{c}</button>;
+};
+
+// 封面上傳元件
+function CoverUpload({value, onChange}){
+  const ref=useRef();
+  const handleFile=e=>{
+    const file=e.target.files[0];
+    if(!file)return;
+    if(file.size>2*1024*1024){alert("圖片大小請勿超過 2MB");return;}
+    const reader=new FileReader();
+    reader.onload=ev=>onChange(ev.target.result);
+    reader.readAsDataURL(file);
+  };
+  return(
+    <div style={{display:"flex",flexDirection:"column",gap:4}}>
+      <label style={{fontSize:11,fontWeight:600,color:"#9A3412"}}>封面圖片</label>
+      <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
+        <div onClick={()=>ref.current.click()} style={{width:72,height:100,border:"2px dashed "+(value?"#B87050":"#FDBA74"),borderRadius:8,overflow:"hidden",cursor:"pointer",flexShrink:0,background:"#FFF7ED",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",position:"relative",transition:"border 0.15s"}} onMouseEnter={e=>e.currentTarget.style.borderColor="#B87050"} onMouseLeave={e=>e.currentTarget.style.borderColor=value?"#B87050":"#FDBA74"}>
+          {value
+            ?<img src={value} alt="cover" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+            :<><div style={{fontSize:20,color:"#FDBA74",marginBottom:3}}>↑</div><div style={{fontSize:9,color:"#9A3412",textAlign:"center",lineHeight:1.4,padding:"0 4px"}}>點擊上傳</div></>
+          }
+          {value&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.45)",display:"flex",alignItems:"center",justifyContent:"center",opacity:0,transition:"opacity 0.15s"}} onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>e.currentTarget.style.opacity=0}><span style={{color:"#fff",fontSize:10,fontWeight:600}}>更換</span></div>}
+        </div>
+        <div style={{fontSize:10,color:"#9A3412",lineHeight:1.8,paddingTop:2}}>
+          支援 JPG、PNG<br/>建議比例 5:7<br/>上限 2MB
+          {value&&<button onClick={e=>{e.stopPropagation();onChange("");}} style={{display:"block",marginTop:5,padding:"2px 8px",background:"#FEE2E2",color:"#DC2626",border:"1px solid #FECACA",borderRadius:5,cursor:"pointer",fontSize:10,fontFamily:"inherit"}}>✕ 移除</button>}
+        </div>
+      </div>
+      <input ref={ref} type="file" accept="image/*" onChange={handleFile} style={{display:"none"}}/>
+    </div>
+  );
+}
+
+// QR Code Modal
+function QRModal({book, onClose}){
+  const color=gc(book);
+  const qrId="qrbox_"+book.id+"_"+Date.now();
+  const qrText="溫書閣 ID:"+book.id+" "+book.title+" ISBN:"+(book.isbn||"N/A");
+
+  useEffect(()=>{
+    let attempts=0;
+    const tryInit=()=>{
+      const el=document.getElementById(qrId);
+      if(!el)return;
+      if(typeof QRCode==="undefined"){
+        if(++attempts<40)setTimeout(tryInit,100);
+        return;
+      }
+      el.innerHTML="";
+      new QRCode(el,{text:qrText,width:180,height:180,colorDark:"#431407",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});
+    };
+    const t=setTimeout(tryInit,80);
+    return()=>clearTimeout(t);
+  },[qrId]);
+
+  const doPrint=()=>{
+    const el=document.getElementById(qrId);
+    const inner=el?el.innerHTML:"";
+    const w=window.open("","_blank","width=420,height=520");
+    w.document.write('<html><head><title>QR-'+book.id+'</title><style>body{font-family:sans-serif;text-align:center;padding:28px;background:#fff}h3{font-size:15px;margin:12px 0 4px;color:#431407}p{font-size:11px;color:#9A3412;margin:3px 0}.box{display:inline-block;padding:18px;border:2px solid #B87050;border-radius:10px;margin:10px auto;background:#fff}@media print{button{display:none!important}}</style></head><body>');
+    w.document.write('<div class="box">'+inner+'<h3>'+book.title+'</h3><p>'+book.author+'</p><p>ISBN: '+(book.isbn||"—")+'</p><p>ID: '+book.id+'</p></div>');
+    w.document.write('<br/><button onclick="window.print()" style="margin-top:12px;padding:8px 20px;background:#B87050;color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:13px">⎙ 列印</button>');
+    w.document.write('</body></html>');
+    w.document.close();
+  };
+
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(60,18,5,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:300,padding:20}} onClick={onClose}>
+      <div style={{background:"#fff",borderRadius:14,padding:"22px 24px",width:300,maxWidth:"95vw",border:"1px solid #FDBA74",textAlign:"center",position:"relative"}} onClick={e=>e.stopPropagation()}>
+        <button onClick={onClose} style={{position:"absolute",background:"none",border:"none",fontSize:16,cursor:"pointer",color:"#9A3412",right:14,top:10}}>×</button>
+        <div style={{fontFamily:"Playfair Display,serif",fontSize:15,color:"#431407",marginBottom:4}}>▣ QR Code</div>
+        <div style={{fontSize:11,color:"#9A3412",marginBottom:12,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{book.title}</div>
+        <div style={{display:"flex",justifyContent:"center",marginBottom:12}}>
+          <div style={{padding:10,border:"2px solid "+color,borderRadius:8,display:"inline-block",background:"#fff",minWidth:200,minHeight:200,display:"flex",alignItems:"center",justifyContent:"center"}}>
+            <div id={qrId}/>
+          </div>
+        </div>
+        <div style={{fontSize:11,color:"#9A3412",marginBottom:3}}>作者：{book.author}</div>
+        <div style={{fontSize:10,color:"#B87050",fontFamily:"monospace",marginBottom:3}}>ISBN: {book.isbn||"—"}</div>
+        <div style={{fontSize:10,color:"#9A3412",marginBottom:14}}>ID: {book.id} · {book.type==="ebook"?"電子書":"實體書"}</div>
+        <div style={{display:"flex",gap:8,justifyContent:"center"}}>
+          <Btn c="⎙ 列印 QR" onClick={doPrint}/>
+          <Btn c="關閉" v="o" onClick={onClose}/>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function App(){
+  const[view,setView]=useState("overview");
+  const[isAdm,setIsAdm]=useState(false);
+  const[showL,setShowL]=useState(false);
+  const[pendN,setPendN]=useState(null);
+  const[books,setBooks]=useState(BK);
+  const[members,setMembers]=useState(MB);
+  const[borrows,setBorrows]=useState(BR0);
+  const[copies,setCopies]=useState(initCp);
+  const[q,setQ]=useState("");
+  const[catF,setCatF]=useState("全部");
+  const[typeF,setTypeF]=useState("全部");
+  const[modal,setModal]=useState(null);
+  const[btab,setBtab]=useState("active");
+  const[det,setDet]=useState(null);
+  const[atype,setAtype]=useState("physical");
+  const[nb,setNb]=useState({title:"",author:"",category:CATS[0],isbn:"",condition:"良好",desc:"",publishYear:"",cover:""});
+  const[nm,setNm]=useState({name:"",email:"",phone:""});
+  const[bf,setBf]=useState({memberId:"",bookId:"",cid:"",days:"14"});
+  const[la,setLa]=useState("");
+  const[lp,setLp]=useState("");
+  const[le,setLe]=useState("");
+  const[toasts,setToasts]=useState([]);
+  const[vm,setVm]=useState(()=>Object.fromEntries(BK.map(b=>[b.id,b.views||0])));
+  const[favs,setFavs]=useState(new Set([3,5]));
+  const[rvs,setRvs]=useState([]);
+  const[ratings,setRatings]=useState({});
+  const[myQ,setMyQ]=useState("");
+  const[myTab,setMyTab]=useState("borrow");
+  const[ratingEdit,setRatingEdit]=useState(null);
+  const[picks,setPicks]=useState([]);
+  const[favCat,setFavCat]=useState("全部");
+  const[impRows,setImpRows]=useState(null);
+  const[impErr,setImpErr]=useState("");
+  const[editBook,setEditBook]=useState(null);
+  const[qrBook,setQrBook]=useState(null);
+  const[qrFilter,setQrFilter]=useState("all");
+  const[isDark,setIsDark]=useState(false);
+  const[borrowLimit,setBorrowLimit]=useState(3);
+  const[reportM,setReportM]=useState(()=>{const d=new Date();return d.toISOString().slice(0,7);});
+  const D=(l,r)=>isDark?r:l;
+  const fileRef=useRef();
+
+  const ADM=new Set(["borrow","remind","add","import","members"]);
+  const toast=msg=>{const id=Date.now();setToasts(p=>[...p,{id,msg}]);setTimeout(()=>setToasts(p=>p.filter(t=>t.id!==id)),3000);};
+  const nav=id=>{if(ADM.has(id)&&!isAdm){setPendN(id);setShowL(true);}else setView(id);};
+  const doLogin=()=>{
+    if(la===AID&&lp===APW){setIsAdm(true);setShowL(false);setLa("");setLp("");setLe("");if(pendN){setView(pendN);setPendN(null);}toast("✓ 管理員登入成功");}
+    else{setLe("帳號或密碼錯誤");setLp("");}
+  };
+
+  const avCp=bid=>{const bc=copies[bid]||[];const act=borrows.filter(b=>(b.status==="active"||b.status==="overdue")&&b.bookId===bid).map(b=>b.cid);return bc.filter(c=>!act.includes(c.cid));};
+  const cpCnt=bid=>{const bc=copies[bid]||[];return{total:bc.length,avail:avCp(bid).length};};
+  const avBks=books.filter(b=>{if(b.type!=="physical")return false;const bc=copies[b.id]||[];return bc.length===0?b.status==="available":avCp(b.id).length>0;});
+
+  const doBorrow=()=>{
+    if(!bf.memberId||!bf.bookId){toast("請選擇書目與會員");return;}
+    const mid=parseInt(bf.memberId);
+    const curCnt=borrows.filter(b=>b.memberId===mid&&(b.status==="active"||b.status==="overdue")).length;
+    if(curCnt>=borrowLimit){toast("⚠ 已達借閱上限（"+borrowLimit+" 本），請先歸還後再借閱");return;}
+    const bid=parseInt(bf.bookId),avc=avCp(bid),cid=bf.cid||(avc.length>0?avc[0].cid:"");
+    const d=new Date(),due=new Date(d);due.setDate(due.getDate()+parseInt(bf.days));
+    setBorrows(p=>[...p,{id:Date.now(),bookId:bid,memberId:parseInt(bf.memberId),cid,borrowDate:d.toISOString().slice(0,10),dueDate:due.toISOString().slice(0,10),returnDate:null,status:"active"}]);
+    if(cid)setCopies(p=>({...p,[bid]:(p[bid]||[]).map(c=>c.cid===cid?{...c,status:"borrowed"}:c)}));
+    if(avCp(bid).filter(c=>c.cid!==cid).length===0)setBooks(p=>p.map(b=>b.id===bid?{...b,status:"borrowed"}:b));
+    setBf({memberId:"",bookId:"",cid:"",days:"14"});setModal(null);toast("✓ 借閱登記完成");
+  };
+  const doRet=(id,bid,cid)=>{
+    setBorrows(p=>p.map(b=>b.id===id?{...b,status:"returned",returnDate:new Date().toISOString().slice(0,10)}:b));
+    if(cid)setCopies(p=>({...p,[bid]:(p[bid]||[]).map(c=>c.cid===cid?{...c,status:"available"}:c)}));
+    setBooks(p=>p.map(b=>b.id===bid?{...b,status:"available"}:b));toast("✓ 書目已歸還");
+  };
+  const doAddMem=()=>{if(!nm.name){toast("請填寫姓名");return;}setMembers(p=>[...p,{...nm,id:Date.now(),joinDate:new Date().toISOString().slice(0,10)}]);setNm({name:"",email:"",phone:""});setModal(null);toast("✓ 新增完成");};
+  const doAddBk=()=>{
+    if(!nb.title){toast("請填寫書名");return;}
+    const bk={...nb,id:Date.now(),type:atype,status:"available",addedDate:new Date().toISOString().slice(0,10),condition:atype==="ebook"?"—":nb.condition,views:0,cover:""};
+    setBooks(p=>[...p,bk]);setVm(v=>({...v,[bk.id]:0}));
+    if(atype==="physical")setCopies(p=>({...p,[bk.id]:[{cid:bk.id+"_1",label:"第1冊",cond:bk.condition,status:"available"}]}));
+    setNb({title:"",author:"",category:CATS[0],isbn:"",condition:"良好",desc:"",publishYear:"",cover:""});toast("✓ 書目新增成功");
+  };
+  const doSaveEdit=()=>{
+    if(!editBook||!editBook.title){toast("書名不能為空");return;}
+    setBooks(p=>p.map(b=>b.id===editBook.id?{...b,...editBook}:b));
+    setEditBook(null);toast("✓ 書目已更新");
+  };
+
+  const parseCSV=text=>{
+    const lines=text.replace(/\r/g,"").split("\n").filter(l=>l.trim());
+    if(lines.length<2){setImpErr("CSV 沒有資料列");return;}
+    const hds=lines[0].split(",").map(h=>h.replace(/^"|"$/g,"").trim());
+    const CM={title:["書名","title"],author:["作者","author"],category:["分類","category"],isbn:["ISBN","isbn"],type:["類型","type"],condition:["書況","condition"],publishYear:["出版年","publishYear"],desc:["簡介","desc"]};
+    const fv=(row,keys)=>{for(const k of keys){const v=row[k];if(v!==undefined&&v!==null&&String(v).trim())return String(v).trim();}return "";};
+    const raw=lines.slice(1).map(line=>{const obj={};const vals=line.split(",").map(v=>v.replace(/^"|"$/g,"").trim());hds.forEach((h,i)=>{obj[h]=vals[i]||"";});return obj;}).filter(r=>Object.values(r).some(v=>v));
+    setImpRows(raw.map((r,i)=>({id:Date.now()+i,title:fv(r,CM.title)||"（未命名）",author:fv(r,CM.author),category:CATS.includes(fv(r,CM.category))?fv(r,CM.category):CATS[0],isbn:fv(r,CM.isbn),type:fv(r,CM.type)==="電子書"?"ebook":"physical",condition:fv(r,CM.condition)||"良好",status:"available",addedDate:new Date().toISOString().slice(0,10),publishYear:fv(r,CM.publishYear),desc:fv(r,CM.desc),views:0,cover:""})));
+    setImpErr("");
+  };
+  const handleFile=ev=>{const file=ev.target.files[0];if(!file)return;ev.target.value="";const reader=new FileReader();reader.onload=e=>parseCSV(e.target.result||"");reader.readAsText(file,"UTF-8");};
+  const doImport=()=>{
+    if(!impRows)return;
+    const nw=impRows.filter(r=>!books.some(b=>b.isbn&&b.isbn===r.isbn));
+    setBooks(p=>[...p,...nw]);
+    nw.forEach(b=>{setVm(v=>({...v,[b.id]:0}));if(b.type==="physical")setCopies(p=>({...p,[b.id]:[{cid:b.id+"_1",label:"第1冊",cond:b.condition,status:"available"}]}));});
+    toast("✓ 已匯入 "+nw.length+" 筆");setImpRows(null);
+  };
+
+  const now=new Date();
+  const actBr=borrows.filter(b=>b.status==="active"||b.status==="overdue");
+  const brView=btab==="active"?actBr:btab==="returned"?borrows.filter(b=>b.status==="returned"):null;
+  const gm=id=>members.find(m=>m.id===id);
+  const gb=id=>books.find(b=>b.id===id);
+  const dueW=borrows.filter(b=>b.status==="active"||b.status==="overdue").map(b=>({...b,days:Math.floor((new Date(b.dueDate)-now)/86400000)})).filter(x=>x.days<=7).sort((a,b)=>a.days-b.days);
+  const filt=useMemo(()=>books.filter(b=>(b.title.includes(q)||b.author.includes(q)||(b.isbn||"").includes(q))&&(catF==="全部"||b.category===catF)&&(typeF==="全部"||(typeF==="ebook"?b.type==="ebook":b.type==="physical"))),[books,q,catF,typeF]);
+  const today=new Date().toLocaleDateString("zh-TW",{year:"numeric",month:"long",day:"numeric",weekday:"long"});
+  const curDet=det?books.find(b=>b.id===det.id)||det:null;
+  const isAP=ADM.has(view);
+  const totalP=books.filter(b=>b.type==="physical").length;
+  const totalE=books.filter(b=>b.type==="ebook").length;
+
+  return(<>
+    <div className={"app"+(isDark?" dk":"")}>
+      <aside className="sb">
+        <div className="sbl"><h1>溫書閣</h1><p>Library System</p></div>
+        <nav className="nav">
+          <div className="nlbl"><span>一般功能</span></div>
+          {NAV_P.map(n=><div key={n.id} className={"ni"+(view===n.id?" on":"")} onClick={()=>nav(n.id)}><span style={{fontSize:12,width:14,textAlign:"center",fontStyle:"normal",flexShrink:0}}>{n.icon}</span><span>{n.label}</span></div>)}
+          <div className="ndiv"/>
+          <div className="nlbl"><span>管理員專區</span>{isAdm&&<span style={{fontSize:8,background:"rgba(59,30,0,0.14)",color:"#3B1E00",padding:"1px 5px",borderRadius:6,fontWeight:800}}>已登入</span>}</div>
+          {NAV_A.map(n=>(
+            <div key={n.id} className={"ni"+(view===n.id?" on":"")} onClick={()=>nav(n.id)} style={{opacity:isAdm?1:0.62}}>
+              <span style={{fontSize:12,width:14,textAlign:"center",fontStyle:"normal",flexShrink:0}}>{n.icon}</span><span>{n.label}</span>
+              {n.id==="remind"&&dueW.length>0&&isAdm&&<span style={{marginLeft:"auto",fontSize:9,background:"#DC2626",color:"#fff",padding:"1px 5px",borderRadius:6,fontWeight:800}}>{dueW.length}</span>}
+              {n.id==="import"&&isAdm&&<span style={{marginLeft:"auto",fontSize:8,background:"#D1FAE5",color:"#065F46",padding:"1px 4px",borderRadius:4,fontWeight:800}}>NEW</span>}
+              {!isAdm&&<span style={{fontSize:9,color:"rgba(59,30,0,0.3)",marginLeft:"auto"}}>🔒</span>}
+            </div>
+          ))}
+        </nav>
+        <div className="sbf">
+          <button onClick={()=>setIsDark(d=>!d)} style={{width:"100%",padding:"5px",background:isDark?"rgba(240,213,165,0.15)":"rgba(0,0,0,0.08)",border:"1px solid "+(isDark?"rgba(240,213,165,0.3)":"rgba(59,30,0,0.18)"),borderRadius:6,color:isDark?"#F0D5A5":"#3B1E00",fontSize:11,fontWeight:700,cursor:"pointer",marginBottom:6,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}>
+            {isDark?"☀ 切換亮色模式":"🌙 切換暗色模式"}
+          </button>
+          {isAdm?(
+            <>
+              <div style={{display:"flex",alignItems:"center",gap:5,marginBottom:5,paddingBottom:5,borderBottom:"1px solid rgba(255,255,255,0.5)"}}>
+                <span>🔐</span><span style={{fontWeight:700,color:"#3B1E00",fontSize:11}}>管理員模式</span>
+              </div>
+              <button onClick={()=>{setIsAdm(false);if(ADM.has(view))setView("catalog");toast("已登出");}} style={{width:"100%",padding:"5px",background:"rgba(59,30,0,0.11)",border:"1px solid rgba(59,30,0,0.22)",borderRadius:6,color:"#3B1E00",fontSize:11,fontWeight:700,cursor:"pointer",marginBottom:6}}>⬡ 登出管理員</button>
+            </>
+          ):(
+            <button onClick={()=>setShowL(true)} style={{width:"100%",padding:"5px",background:"rgba(255,255,255,0.5)",border:"1px solid rgba(255,255,255,0.65)",borderRadius:6,color:"#3B1E00",fontSize:11,fontWeight:700,cursor:"pointer",marginBottom:6}}>🔐 管理員登入</button>
+          )}
+          館藏：{totalP} 冊 · 電子書：{totalE} 冊<br/>
+          收藏：{favs.size} 本 · 會員：{members.length} 人<br/>
+          {dueW.filter(x=>x.days<0).length>0&&<span style={{color:"#3B1E00",fontWeight:800}}>⚠ {dueW.filter(x=>x.days<0).length} 件逾期</span>}
+        </div>
+      </aside>
+
+      <main className="main">
+        <div className="hdr">
+          <div>
+            <h2>{([...NAV_P,...NAV_A].find(n=>n.id===view)||{label:"書目管理"}).label}{isAP&&<span style={{fontSize:10,background:"#FFF7ED",color:"#B87050",border:"1px solid #FDBA74",padding:"2px 6px",borderRadius:11,fontWeight:600}}>🔐</span>}</h2>
+            <p>{today}</p>
+          </div>
+          <div style={{display:"flex",gap:6}}>
+            {view==="catalog"&&isAdm&&<Btn c="＋ 新增" onClick={()=>nav("add")}/>}
+            {view==="borrow"&&isAdm&&<Btn c="＋ 新增借閱" onClick={()=>setModal("borrow")}/>}
+            {view==="members"&&isAdm&&<Btn c="＋ 新增會員" onClick={()=>setModal("member")}/>}
+          </div>
+        </div>
+
+        <div className="body">
+
+          {view==="catalog"&&<>
+            <div className="sbar">
+              <div className="siw"><span className="sii">⌕</span><input placeholder="搜尋書名、作者、ISBN…" value={q} onChange={e=>setQ(e.target.value)}/></div>
+              <select style={{width:135}} value={catF} onChange={e=>setCatF(e.target.value)}><option value="全部">全部分類</option>{CATS.map(c=><option key={c} value={c}>[{KOD[c]}] {c}</option>)}</select>
+              <select style={{width:90}} value={typeF} onChange={e=>setTypeF(e.target.value)}><option value="全部">全部類型</option><option value="physical">實體書</option><option value="ebook">電子書</option></select>
+              <span style={{fontSize:11,color:"#9A3412"}}>共 <b>{filt.length}</b> 本</span>
+            </div>
+            <div className="tc"><table>
+              <thead><tr><th style={{width:185}}>書名</th><th>分類</th><th>書況</th><th>狀態/冊數</th><th style={{textAlign:"center"}}>點閱</th><th>操作</th></tr></thead>
+              <tbody>{filt.map(bk=>{const color=gc(bk),code=gk(bk),cc=cpCnt(bk.id);return(
+                <tr key={bk.id}>
+                  <td><div style={{display:"flex",alignItems:"center",gap:6,cursor:"pointer"}} onClick={()=>{setDet(bk);setVm(v=>({...v,[bk.id]:(v[bk.id]||0)+1}));}}><Cover book={bk} w={25} h={35}/><div><div style={{fontWeight:600,fontSize:11,color:"#431407",lineHeight:1.3,maxWidth:115}}>{bk.title}{favs.has(bk.id)&&<span style={{color:"#EF4444",marginLeft:2,fontSize:9}}>♥</span>}</div><div style={{fontSize:9,color:"#9A3412"}}>{bk.author}</div></div></div></td>
+                  <td><span style={{background:color+"18",color,padding:"1px 4px",borderRadius:3,fontSize:9,fontWeight:700,fontFamily:"monospace"}}>{code}</span></td>
+                  <td><Tag c={bk.condition} s={cs(bk.condition)}/></td>
+                  <td>{bk.type==="physical"&&cc.total>0?<div><Tag c={cc.avail>0?"可借":"借出"} s={cc.avail>0?{background:"#D1FAE5",color:"#065F46"}:{background:"#FEE2E2",color:"#991B1B"}}/><span style={{fontSize:9,color:"#9A3412",marginLeft:3}}>{cc.avail}/{cc.total}冊</span></div>:<Tag c={bk.status==="available"?"可借閱":"借出中"} s={bk.status==="available"?{background:"#D1FAE5",color:"#065F46"}:{background:"#FEE2E2",color:"#991B1B"}}/>}</td>
+                  <td style={{fontSize:11,color:"#9A3412",textAlign:"center"}}>{vm[bk.id]||0}</td>
+                  <td><div style={{display:"flex",gap:3}}><Btn c="詳情" sm v="o" s={{border:"1px solid #FDBA74",color:"#B87050"}} onClick={()=>{setDet(bk);setVm(v=>({...v,[bk.id]:(v[bk.id]||0)+1}));}}/>{isAdm&&<Btn c="編輯" sm v="o" s={{border:"1px solid #10B981",color:"#10B981"}} onClick={()=>setEditBook({...bk})}/>}<Btn c="QR" sm v="o" s={{border:"1px solid #9333EA",color:"#9333EA"}} onClick={()=>setQrBook(bk)}/>{isAdm&&<Btn c="刪" sm v="r" onClick={()=>{setBooks(p=>p.filter(b=>b.id!==bk.id));toast("書目已刪除");}}/>}</div></td>
+                </tr>
+              );})}
+              </tbody>
+            </table></div>
+          </>}
+
+          {view==="ebooks"&&<div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+            {books.filter(b=>b.type==="ebook").map(bk=>{const color=gc(bk),code=gk(bk);return(
+              <div key={bk.id} style={{background:"#fff",borderRadius:9,padding:11,border:"1px solid #FDBA74",cursor:"pointer"}} onClick={()=>{setDet(bk);setVm(v=>({...v,[bk.id]:(v[bk.id]||0)+1}));}}>
+                <div style={{display:"flex",gap:7,marginBottom:6}}><Cover book={bk} w={34} h={47}/><div style={{flex:1,minWidth:0}}><span style={{background:color+"18",color,padding:"1px 4px",borderRadius:3,fontSize:8.5,fontWeight:700,fontFamily:"monospace",display:"inline-block",marginBottom:3}}>{code}</span><div style={{fontSize:11,color:"#431407",fontFamily:"Playfair Display,serif",lineHeight:1.3}}>{bk.title}</div><div style={{fontSize:9.5,color:"#9A3412"}}>{bk.author}</div></div></div>
+                <div style={{fontSize:10,color:"#7C2D12",lineHeight:1.4,marginBottom:4}}>{(bk.desc||"").slice(0,42)}…</div>
+                <div style={{display:"flex",justifyContent:"space-between"}}><span style={{fontSize:10,color:"#9A3412"}}>👁 {vm[bk.id]||0}</span><span style={{fontSize:10,color:"#B87050",fontWeight:600}}>閱讀 →</span></div>
+              </div>
+            );})}
+          </div>}
+
+          {view==="categories"&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(128px,1fr))",gap:8}}>
+            {CATS.map(cat=>{const total=books.filter(b=>b.category===cat&&b.type==="physical").length;const bwd=books.filter(b=>b.category===cat&&b.status==="borrowed").length;const color=CLR[cat]||"#B87050",code=KOD[cat]||"";return(
+              <div key={cat} style={{background:"#fff",borderRadius:9,padding:10,border:"1px solid #FDBA74",cursor:"pointer",position:"relative",overflow:"hidden"}} onClick={()=>{setCatF(cat);setTypeF("全部");setQ("");setView("catalog");}}>
+                <div style={{position:"absolute",top:0,right:0,width:20,height:20,background:color+"12",borderRadius:"0 9px 0 20px"}}/>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:2}}><span style={{background:color+"18",color,fontSize:8,fontWeight:700,fontFamily:"monospace",padding:"1px 3px",borderRadius:3}}>{code}</span><span style={{fontSize:9,color:"#C2410C"}}>{total}冊</span></div>
+                <div style={{fontSize:9.5,color:"#431407",marginBottom:2,fontWeight:600,lineHeight:1.3}}>{cat}</div>
+                <div style={{fontSize:14,fontWeight:700,color,fontFamily:"Playfair Display,serif"}}>{total}</div>
+                <div style={{fontSize:9,color:"#9A3412",marginBottom:2}}>可借{total-bwd}·借出{bwd}</div>
+                <div style={{background:"#FFF3E0",borderRadius:2,height:2}}><div style={{background:color,borderRadius:2,height:"100%",width:total>0?((total-bwd)/total*100)+"%":"0%"}}/></div>
+              </div>
+            );})}
+          </div>}
+
+          {view==="borrow"&&isAdm&&<>
+            <div className="tabs">
+              <button className={"tab"+(btab==="active"?" on":"")} onClick={()=>setBtab("active")}>借出中 ({actBr.length})</button>
+              <button className={"tab"+(btab==="returned"?" on":"")} onClick={()=>setBtab("returned")}>已歸還 ({borrows.filter(b=>b.status==="returned").length})</button>
+              <button className={"tab"+(btab==="rvs"?" on":"")} onClick={()=>setBtab("rvs")}>預約 ({rvs.length})</button>
+            </div>
+            {btab!=="rvs"?<div className="tc"><table>
+              <thead><tr><th>書名</th><th>冊別</th><th>借閱人</th><th>借閱日</th><th>應還日</th><th>狀態</th><th>操作</th></tr></thead>
+              <tbody>{(brView||[]).map(b=>{const bk=gb(b.bookId),mb=gm(b.memberId),days=Math.floor((new Date(b.dueDate)-now)/86400000);return(
+                <tr key={b.id} style={{background:b.status==="overdue"?"#FEF2F2":b.status==="active"&&days<=3&&days>=0?"#FFFBEB":""}}>
+                  <td><div style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer"}} onClick={()=>bk&&setDet(bk)}>{bk&&<Cover book={bk} w={17} h={23}/>}<span style={{fontWeight:600,fontSize:11,color:"#431407"}}>{bk?bk.title:"—"}</span></div></td>
+                  <td style={{fontSize:9,color:"#9A3412",fontFamily:"monospace"}}>{b.cid||"—"}</td>
+                  <td>{mb?mb.name:"—"}</td>
+                  <td style={{fontSize:10}}>{b.borrowDate}</td>
+                  <td style={{fontSize:10,color:b.status==="overdue"?"#DC2626":days<=3&&days>=0?"#D97706":"#431407",fontWeight:days<=3||b.status==="overdue"?700:400}}>{b.dueDate}</td>
+                  <td><Tag c={b.status==="returned"?"已歸還":b.status==="overdue"?"⚠逾期":"借出中"} s={b.status==="returned"?{background:"#D1FAE5",color:"#065F46"}:b.status==="overdue"?{background:"#FEF3C7",color:"#92400E"}:{background:"#FEE2E2",color:"#991B1B"}}/></td>
+                  <td>{b.status!=="returned"?<Btn c="✓" sm v="g" onClick={()=>doRet(b.id,b.bookId,b.cid)}/>:<span style={{fontSize:9,color:"#9A3412"}}>{b.returnDate}</span>}</td>
+                </tr>
+              );})}
+              </tbody>
+            </table></div>:rvs.length===0?<div className="card"><div style={{textAlign:"center",color:"#9A3412",fontSize:13,padding:"10px 0"}}>目前沒有預約紀錄</div></div>:
+            <div className="tc"><table>
+              <thead><tr><th>書名</th><th>預約日期</th><th>狀態</th><th>操作</th></tr></thead>
+              <tbody>{rvs.map(r=>{const bk=gb(r.bookId),av=bk&&avCp(bk.id).length>0;return(
+                <tr key={r.id}>
+                  <td><div style={{display:"flex",alignItems:"center",gap:5}}>{bk&&<Cover book={bk} w={17} h={23}/>}<span style={{fontWeight:600,fontSize:11,color:"#431407"}}>{bk?bk.title:"—"}</span></div></td>
+                  <td style={{fontSize:10,color:"#9A3412"}}>{r.date}</td>
+                  <td>{av?<Tag c="已可借閱" s={{background:"#D1FAE5",color:"#065F46"}}/>:<Tag c="仍借出中" s={{background:"#FEE2E2",color:"#991B1B"}}/>}</td>
+                  <td><div style={{display:"flex",gap:4}}>{av&&<Btn c="轉借閱" sm onClick={()=>{setRvs(rs=>rs.filter(x=>x.bookId!==r.bookId));setBf({memberId:"",bookId:String(r.bookId),cid:"",days:"14"});setModal("borrow");}}/>}<Btn c="取消" sm v="r" onClick={()=>{setRvs(rs=>rs.filter(x=>x.bookId!==r.bookId));toast("預約已取消");}}/></div></td>
+                </tr>
+              );})}
+              </tbody>
+            </table></div>}
+          </>}
+
+          {view==="remind"&&isAdm&&<div style={{maxWidth:660}}>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:9,marginBottom:12}}>
+              {[["全部",borrows.filter(b=>b.status==="active"||b.status==="overdue").length,"#B87050","#FFF7ED"],["逾期",dueW.filter(x=>x.days<0).length,"#DC2626","#FEF2F2"],["3天內",dueW.filter(x=>x.days>=0&&x.days<=3).length,"#D97706","#FEF3C7"],["7天內",dueW.filter(x=>x.days>=0&&x.days<=7).length,"#92400E","#FFFBEB"]].map(([l,v,c,bg])=>(
+                <div key={l} style={{background:bg,borderRadius:9,padding:"10px 11px",border:"1px solid "+c+"30"}}>
+                  <div style={{fontSize:18,fontWeight:700,color:c,fontFamily:"Playfair Display,serif"}}>{v}</div>
+                  <div style={{fontSize:10,color:c,fontWeight:600,marginTop:2}}>{l}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:7}}>
+              {dueW.length===0?<div className="card"><div style={{textAlign:"center",color:"#9A3412",fontSize:13,padding:"10px 0"}}>目前無近期到期借閱</div></div>:dueW.map(x=>{
+                const bk=gb(x.bookId),mb=gm(x.memberId);
+                const d=x.days<0?{bg:"#FEF2F2",brd:"#FECACA",tc:"#DC2626",lb:"逾期"+Math.abs(x.days)+"天"}:x.days===0?{bg:"#FEF3C7",brd:"#FCD34D",tc:"#D97706",lb:"今日到期"}:x.days<=3?{bg:"#FEF3C7",brd:"#FCD34D",tc:"#D97706",lb:x.days+"天後"}:{bg:"#F0FDF4",brd:"#86EFAC",tc:"#16A34A",lb:x.days+"天後"};
+                return(
+                  <div key={x.id} style={{background:d.bg,borderRadius:9,padding:"10px 12px",border:"1px solid "+d.brd,display:"flex",alignItems:"center",gap:10}}>
+                    {bk&&<Cover book={bk} w={28} h={39}/>}
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontWeight:700,fontSize:12,color:"#431407",marginBottom:1}}>{bk?bk.title:"—"}</div>
+                      <div style={{fontSize:10,color:"#9A3412"}}>借閱人：{mb?mb.name:"—"} · {mb?mb.phone:""}</div>
+                      <div style={{fontSize:10,color:"#9A3412"}}>應還：{x.dueDate}</div>
+                    </div>
+                    <div style={{fontSize:12,fontWeight:800,color:d.tc,background:"#fff",padding:"3px 9px",borderRadius:12,border:"1px solid "+d.brd,whiteSpace:"nowrap"}}>{d.lb}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>}
+
+          {view==="add"&&isAdm&&<>
+            <div className="tabs"><button className={"tab"+(atype==="physical"?" on":"")} onClick={()=>setAtype("physical")}>≡ 實體書</button><button className={"tab"+(atype==="ebook"?" on":"")} onClick={()=>setAtype("ebook")}>□ 電子書</button></div>
+            <div style={{background:"#fff",borderRadius:10,padding:15,border:"1px solid #FDBA74",maxWidth:560}}>
+              <div style={{fontFamily:"Playfair Display,serif",fontSize:14,color:"#431407",marginBottom:12}}>{atype==="ebook"?"新增電子書目":"新增實體書目"}</div>
+              <div style={{display:"flex",gap:14,marginBottom:12,paddingBottom:12,borderBottom:"1px solid #FFF3E0"}}>
+                <CoverUpload value={nb.cover} onChange={v=>setNb(p=>({...p,cover:v}))}/>
+                <div style={{flex:1,display:"grid",gridTemplateColumns:"1fr 1fr",gap:7,alignContent:"start"}}>
+                  <div className="fg"><label>書名 *</label><input placeholder="請輸入書名" value={nb.title} onChange={e=>setNb(p=>({...p,title:e.target.value}))}/></div>
+                  <div className="fg"><label>作者</label><input placeholder="請輸入作者" value={nb.author} onChange={e=>setNb(p=>({...p,author:e.target.value}))}/></div>
+                  <div className="fg"><label>分類</label><select value={nb.category} onChange={e=>setNb(p=>({...p,category:e.target.value}))}>{CATS.map(c=><option key={c} value={c}>[{KOD[c]}] {c}</option>)}</select></div>
+                  <div className="fg"><label>出版年</label><input placeholder="2024" value={nb.publishYear} onChange={e=>setNb(p=>({...p,publishYear:e.target.value}))}/></div>
+                  <div className="fg"><label>ISBN</label><input placeholder="978-XXX" value={nb.isbn} onChange={e=>setNb(p=>({...p,isbn:e.target.value}))}/></div>
+                  {atype==="physical"?<div className="fg"><label>書況</label><select value={nb.condition} onChange={e=>setNb(p=>({...p,condition:e.target.value}))}>{["全新","良好","普通","破損"].map(c=><option key={c}>{c}</option>)}</select></div>:<div className="fg"><label>連結</label><input placeholder="https://…" value={nb.ebookUrl||""} onChange={e=>setNb(p=>({...p,ebookUrl:e.target.value}))}/></div>}
+                </div>
+              </div>
+              <div className="fg"><label>簡介</label><textarea rows={2} placeholder="請輸入描述…" value={nb.desc} onChange={e=>setNb(p=>({...p,desc:e.target.value}))} style={{resize:"vertical"}}/></div>
+              {nb.title&&<div style={{display:"flex",alignItems:"center",gap:9,padding:9,background:"#FFF7ED",borderRadius:8,border:"1px solid #FDBA74",marginBottom:10}}>
+                <Cover book={{...nb,type:atype,id:"prev"}} w={30} h={42}/>
+                <div><div style={{fontSize:11,fontWeight:600,color:"#431407"}}>{nb.title}</div><div style={{fontSize:9,color:"#9A3412"}}>{nb.author}</div></div>
+                {nb.cover&&<span style={{fontSize:9,background:"#D1FAE5",color:"#065F46",padding:"2px 7px",borderRadius:9,marginLeft:"auto"}}>✓ 已上傳封面</span>}
+              </div>}
+              <div style={{display:"flex",gap:7}}><Btn c="✓ 確認新增" onClick={doAddBk}/><Btn c="清除" v="o" onClick={()=>setNb({title:"",author:"",category:CATS[0],isbn:"",condition:"良好",desc:"",publishYear:"",cover:""})}/></div>
+            </div>
+          </>}
+
+          {view==="import"&&isAdm&&<div style={{maxWidth:640}}>
+            <div className="card" style={{marginBottom:10}}>
+              <div className="ch">⬇ 批量匯入書目（CSV）</div>
+              <div onClick={()=>fileRef.current.click()} style={{border:"2px dashed #FDBA74",borderRadius:9,padding:"20px 16px",textAlign:"center",cursor:"pointer",background:"#FFF7ED",marginBottom:9}} onMouseEnter={e=>e.currentTarget.style.borderColor="#B87050"} onMouseLeave={e=>e.currentTarget.style.borderColor="#FDBA74"}>
+                <div style={{fontSize:22,marginBottom:5}}>📂</div>
+                <div style={{fontSize:12,fontWeight:700,color:"#431407",marginBottom:2}}>點擊選擇 CSV 檔案</div>
+                <div style={{fontSize:11,color:"#9A3412"}}>支援 .csv 格式（UTF-8）</div>
+              </div>
+              <input ref={fileRef} type="file" accept=".csv" onChange={handleFile} style={{display:"none"}}/>
+              {impErr&&<div style={{background:"#FEE2E2",borderRadius:6,padding:"5px 8px",fontSize:11,color:"#991B1B",marginBottom:8,border:"1px solid #FECACA"}}>⚠ {impErr}</div>}
+              <div style={{background:"#DBEAFE",borderRadius:6,padding:8,border:"1px solid #BFDBFE",marginBottom:8,fontSize:11,color:"#1E40AF"}}>欄位：書名（必填）、作者、分類、ISBN、類型（實體書/電子書）、書況、出版年、簡介</div>
+              <Btn c="⬇ 下載CSV範本" v="o" onClick={()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\uFEFF書名,作者,分類,ISBN,類型,書況,出版年,簡介\n範例書名,作者,消防叢書類,978-XXX,實體書,良好,2024,說明\n"],{type:"text/csv;charset=utf-8;"}));a.download="書目範本.csv";a.click();toast("✓ 已下載");}}/>
+            </div>
+            {impRows&&<div className="card">
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8,paddingBottom:6,borderBottom:"2px solid #FED7AA"}}>
+                <div style={{fontFamily:"Playfair Display,serif",fontSize:13,color:"#431407"}}>預覽（共 {impRows.length} 筆）</div>
+                <div style={{display:"flex",gap:6}}><Btn c="取消" v="o" onClick={()=>setImpRows(null)}/><Btn c={"✓ 匯入 "+impRows.length+" 筆"} onClick={doImport}/></div>
+              </div>
+              <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
+                <thead><tr style={{background:"#FFF7ED"}}>{["書名","作者","分類","類型","書況"].map(h=><th key={h} style={{padding:"4px 7px",textAlign:"left",color:"#9A3412",fontWeight:600,border:"1px solid #FDBA74"}}>{h}</th>)}</tr></thead>
+                <tbody>{impRows.slice(0,6).map((r,i)=>(
+                  <tr key={i} style={{background:i%2?"#FFF7ED":"#fff"}}>
+                    <td style={{padding:"4px 7px",border:"1px solid #FFF3E0",fontWeight:600,color:"#431407",maxWidth:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.title}</td>
+                    <td style={{padding:"4px 7px",border:"1px solid #FFF3E0",color:"#9A3412"}}>{r.author||"—"}</td>
+                    <td style={{padding:"4px 7px",border:"1px solid #FFF3E0"}}><span style={{background:gc(r)+"18",color:gc(r),padding:"1px 3px",borderRadius:3,fontSize:9,fontWeight:700}}>{gk(r)}</span></td>
+                    <td style={{padding:"4px 7px",border:"1px solid #FFF3E0"}}><Tag c={r.type==="ebook"?"電子書":"實體書"} s={r.type==="ebook"?{background:"#DBEAFE",color:"#1E40AF"}:{background:"#FFF7ED",color:"#C2410C"}}/></td>
+                    <td style={{padding:"4px 7px",border:"1px solid #FFF3E0"}}><Tag c={r.condition} s={cs(r.condition)}/></td>
+                  </tr>
+                ))}
+                {impRows.length>6&&<tr><td colSpan={5} style={{padding:"4px 7px",color:"#9A3412",fontSize:10,fontStyle:"italic",textAlign:"center",border:"1px solid #FFF3E0"}}>另有 {impRows.length-6} 筆</td></tr>}
+                </tbody>
+              </table>
+            </div>}
+          </div>}
+
+          {view==="qr"&&isAdm&&(()=>{
+            const qrBooks=qrFilter==="all"?books:qrFilter==="physical"?books.filter(b=>b.type==="physical"):books.filter(b=>b.type==="ebook");
+            return<div style={{maxWidth:900}}>
+              <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:14,flexWrap:"wrap"}}>
+                <div style={{fontFamily:"Playfair Display,serif",fontSize:13,color:"#9A3412"}}>點擊書目卡片產生 QR Code 並列印</div>
+                <div style={{marginLeft:"auto",display:"flex",gap:6}}>
+                  {[["all","全部書目"],["physical","實體書"],["ebook","電子書"]].map(([k,l])=>(
+                    <button key={k} onClick={()=>setQrFilter(k)} style={{padding:"4px 11px",borderRadius:6,border:"none",cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit",background:qrFilter===k?"#B87050":"#FFF7ED",color:qrFilter===k?"#fff":"#9A3412"}}>{l}</button>
+                  ))}
+                </div>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(148px,1fr))",gap:12}}>
+                {qrBooks.map(bk=>{
+                  const color=gc(bk);
+                  return(
+                    <div key={bk.id} onClick={()=>setQrBook(bk)} style={{background:"#fff",borderRadius:10,padding:12,border:"1px solid #FDBA74",cursor:"pointer",textAlign:"center",transition:"transform 0.15s,box-shadow 0.15s"}} onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 4px 12px rgba(184,112,80,0.15)";}} onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="";}}>
+                      <div style={{display:"flex",justifyContent:"center",marginBottom:8}}>
+                        <div style={{width:80,height:80,border:"2px solid "+color,borderRadius:8,background:"#FFF7ED",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4}}>
+                          <Cover book={bk} w={38} h={53}/>
+                        </div>
+                      </div>
+                      <div style={{fontSize:11,fontWeight:700,color:"#431407",lineHeight:1.3,marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{bk.title}</div>
+                      <div style={{fontSize:9,color:"#9A3412",marginBottom:6}}>{bk.author}</div>
+                      <div style={{display:"flex",justifyContent:"center",gap:4,marginBottom:6}}>
+                        <span style={{background:color+"18",color,padding:"1px 5px",borderRadius:3,fontSize:9,fontWeight:700,fontFamily:"monospace"}}>{gk(bk)}</span>
+                        <Tag c={bk.type==="ebook"?"電子書":"實體書"} s={bk.type==="ebook"?{background:"#DBEAFE",color:"#1E40AF",fontSize:9}:{background:"#FFF7ED",color:"#C2410C",fontSize:9}}/>
+                      </div>
+                      <div style={{fontSize:10,color:"#9333EA",fontWeight:600}}>▣ 點擊產生 QR</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>;
+          })()}
+
+          {view==="report"&&isAdm&&(()=>{
+            const now2=new Date();
+            const months=[];
+            for(let i=0;i<12;i++){const d=new Date(now2.getFullYear(),now2.getMonth()-i,1);months.push({val:d.toISOString().slice(0,7),label:d.getFullYear()+"年"+(d.getMonth()+1)+"月"});}
+            const selM=reportM;
+            const mBr=borrows.filter(b=>b.borrowDate&&b.borrowDate.startsWith(selM));
+            const mRet=borrows.filter(b=>b.returnDate&&b.returnDate.startsWith(selM));
+            const mOD=borrows.filter(b=>b.status==="overdue");
+            const odRate=Math.round((mOD.length/Math.max(borrows.filter(b=>b.status==="active"||b.status==="overdue").length,1))*100);
+            const bookCounts={};mBr.forEach(b=>{bookCounts[b.bookId]=(bookCounts[b.bookId]||0)+1;});
+            const topBooks=Object.entries(bookCounts).sort((a,b2)=>b2[1]-a[1]).slice(0,5).map(([id,cnt])=>({book:books.find(b=>b.id===parseInt(id)),cnt})).filter(x=>x.book);
+            const catCounts={};mBr.forEach(b=>{const bk=books.find(x=>x.id===b.bookId);if(bk)catCounts[bk.category]=(catCounts[bk.category]||0)+1;});
+            const topCats=Object.entries(catCounts).sort((a,b2)=>b2[1]-a[1]).slice(0,6);
+            const maxCat=topCats.length>0?topCats[0][1]:1;
+            const memCounts={};mBr.forEach(b=>{memCounts[b.memberId]=(memCounts[b.memberId]||0)+1;});
+            const topMems=Object.entries(memCounts).sort((a,b2)=>b2[1]-a[1]).slice(0,5).map(([id,cnt])=>({mem:members.find(m=>m.id===parseInt(id)),cnt})).filter(x=>x.mem);
+            const [selY,selMo]=selM.split("-");
+            const printReport=()=>{
+              const w=window.open("","_blank","width=800,height=900");
+              const rows=mBr.map(b=>{const bk=books.find(x=>x.id===b.bookId),mb=members.find(x=>x.id===b.memberId);return`<tr><td>${bk?bk.title:"—"}</td><td>${mb?mb.name:"—"}</td><td>${b.borrowDate}</td><td>${b.dueDate}</td><td>${b.returnDate||"未歸還"}</td><td>${b.status==="overdue"?"⚠逾期":b.status==="returned"?"已歸還":"借出中"}</td></tr>`;}).join("");
+              w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>月度報表</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:sans-serif;padding:24px;color:#222}h1{font-size:19px;color:#431407;margin-bottom:3px}h2{font-size:13px;color:#9A3412;margin:16px 0 7px;padding-bottom:4px;border-bottom:1px solid #FDBA74}.meta{font-size:11px;color:#666;margin-bottom:18px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}.sc{border:1px solid #FDBA74;border-radius:7px;padding:11px;text-align:center}.sc .v{font-size:20px;font-weight:700;color:#B87050}.sc .l{font-size:10px;color:#9A3412;margin-top:2px}table{width:100%;border-collapse:collapse;font-size:11px}th{background:#FFF7ED;padding:6px 8px;text-align:left;color:#9A3412;font-weight:600;border-bottom:1px solid #FDBA74}td{padding:5px 8px;border-bottom:1px solid #FFF3E0}@media print{button{display:none!important}}</style></head><body>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px"><h1>溫書閣　月度借閱報表</h1><button onclick="window.print()" style="padding:6px 14px;background:#B87050;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px">⎙ 列印</button></div>
+              <div class="meta">報表月份：${selY} 年 ${selMo} 月　　產出：${new Date().toLocaleString("zh-TW")}</div>
+              <div class="stats"><div class="sc"><div class="v">${mBr.length}</div><div class="l">本月借閱</div></div><div class="sc"><div class="v">${mRet.length}</div><div class="l">本月歸還</div></div><div class="sc"><div class="v">${mOD.length}</div><div class="l">目前逾期</div></div><div class="sc"><div class="v">${odRate}%</div><div class="l">逾期率</div></div></div>
+              <h2>熱門書目 Top 5</h2><table><tr><th>書名</th><th>作者</th><th>分類</th><th>次數</th></tr>${topBooks.map(x=>`<tr><td>${x.book.title}</td><td>${x.book.author}</td><td>${x.book.category}</td><td><b>${x.cnt}</b></td></tr>`).join("")||"<tr><td colspan=4 style=text-align:center;color:#9A3412>本月無借閱</td></tr>"}</table>
+              <h2>本月借閱明細（共 ${mBr.length} 筆）</h2><table><tr><th>書名</th><th>借閱人</th><th>借閱日</th><th>應還日</th><th>歸還日</th><th>狀態</th></tr>${rows||"<tr><td colspan=6 style=text-align:center;color:#9A3412>本月無借閱</td></tr>"}</table>
+              </body></html>`);w.document.close();
+            };
+            const bg=D("#fff","#231508"),bd=D("#FDBA74","#3A2010"),tc=D("#431407","#F0D5A5"),sc=D("#9A3412","#B09060");
+            return<div style={{maxWidth:860}}>
+              <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16,flexWrap:"wrap"}}>
+                <select value={selM} onChange={e=>setReportM(e.target.value)} style={{width:140,padding:"6px 9px",border:"1.5px solid "+bd,borderRadius:7,fontSize:12,fontFamily:"inherit",background:D("#FFF7ED","#2B1808"),color:tc,outline:"none"}}>
+                  {months.map(m=><option key={m.val} value={m.val}>{m.label}</option>)}
+                </select>
+                <div style={{fontSize:12,color:sc}}>報表月份：<b>{(months.find(m=>m.val===selM)||months[0]).label}</b></div>
+                <div style={{marginLeft:"auto"}}><Btn c="⎙ 列印報表" onClick={printReport}/></div>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:18}}>
+                {[{icon:"📖",val:mBr.length,label:"本月借閱",color:"#B87050",bg:D("#FFF7ED","#2B1808")},{icon:"↩",val:mRet.length,label:"本月歸還",color:"#059669",bg:D("#F0FDF4","#0A2010")},{icon:"⚠",val:mOD.length,label:"目前逾期",color:"#DC2626",bg:D("#FEF2F2","#2A0808")},{icon:"%",val:odRate+"%",label:"逾期率",color:odRate>20?"#DC2626":odRate>10?"#D97706":"#059669",bg:D(odRate>20?"#FEF2F2":odRate>10?"#FEF3C7":"#F0FDF4","#1A1000")}].map((s,i)=>(
+                  <div key={i} style={{background:s.bg,borderRadius:11,padding:"13px 14px",border:"1px solid "+s.color+"25"}}>
+                    <div style={{fontSize:15,marginBottom:4}}>{s.icon}</div>
+                    <div style={{fontSize:21,fontWeight:700,color:s.color,fontFamily:"Playfair Display,serif"}}>{s.val}</div>
+                    <div style={{fontSize:10,color:s.color,fontWeight:600,marginTop:2}}>{s.label}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:13,marginBottom:13}}>
+                <div style={{background:bg,borderRadius:11,padding:"13px 15px",border:"1px solid "+bd}}>
+                  <div style={{fontFamily:"Playfair Display,serif",fontSize:13,color:tc,marginBottom:11,paddingBottom:6,borderBottom:"2px solid "+D("#FED7AA","#3A2010")}}>🏆 熱門書目 Top 5</div>
+                  {topBooks.length===0?<div style={{textAlign:"center",color:sc,fontSize:12,padding:"9px 0"}}>本月無借閱紀錄</div>:topBooks.map((x,i)=>{
+                    const ms=["🥇","🥈","🥉"];
+                    return<div key={x.book.id} style={{display:"flex",alignItems:"center",gap:7,marginBottom:8}}>
+                      <span style={{fontSize:13,width:17,flexShrink:0,textAlign:"center"}}>{i<3?ms[i]:i+1}</span>
+                      <Cover book={x.book} w={21} h={29}/>
+                      <div style={{flex:1,minWidth:0}}><div style={{fontSize:11,fontWeight:700,color:tc,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{x.book.title}</div><div style={{fontSize:9,color:sc}}>{x.book.author}</div></div>
+                      <div style={{fontSize:13,fontWeight:800,color:"#B87050",flexShrink:0}}>{x.cnt}<span style={{fontSize:9,fontWeight:400,color:sc}}>次</span></div>
+                    </div>;
+                  })}
+                </div>
+                <div style={{background:bg,borderRadius:11,padding:"13px 15px",border:"1px solid "+bd}}>
+                  <div style={{fontFamily:"Playfair Display,serif",fontSize:13,color:tc,marginBottom:11,paddingBottom:6,borderBottom:"2px solid "+D("#FED7AA","#3A2010")}}>📚 熱門分類</div>
+                  {topCats.length===0?<div style={{textAlign:"center",color:sc,fontSize:12,padding:"9px 0"}}>本月無借閱紀錄</div>:topCats.map(([cat,cnt])=>(
+                    <div key={cat} style={{display:"flex",alignItems:"center",gap:7,marginBottom:7}}>
+                      <span style={{fontSize:9,fontWeight:700,fontFamily:"monospace",color:CLR[cat]||"#B87050",width:19,flexShrink:0}}>{KOD[cat]||"?"}</span>
+                      <div style={{flex:1}}>
+                        <div style={{display:"flex",justifyContent:"space-between",marginBottom:2}}><span style={{fontSize:10,color:tc,fontWeight:600}}>{cat}</span><span style={{fontSize:10,color:CLR[cat]||"#B87050",fontWeight:700}}>{cnt}次</span></div>
+                        <div style={{height:5,background:D("#FFF3E0","#2B1808"),borderRadius:3,overflow:"hidden"}}><div style={{height:"100%",background:CLR[cat]||"#B87050",borderRadius:3,width:Math.round(cnt/maxCat*100)+"%"}}/></div>
+                      </div>
+                      <span style={{fontSize:10,color:sc,width:28,textAlign:"right",flexShrink:0}}>{mBr.length>0?Math.round(cnt/mBr.length*100):0}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {topMems.length>0&&<div style={{background:bg,borderRadius:11,padding:"13px 15px",border:"1px solid "+bd,marginBottom:13}}>
+                <div style={{fontFamily:"Playfair Display,serif",fontSize:13,color:tc,marginBottom:11,paddingBottom:6,borderBottom:"2px solid "+D("#FED7AA","#3A2010")}}>👤 本月借閱人排行</div>
+                <div style={{display:"flex",gap:9,flexWrap:"wrap"}}>
+                  {topMems.map(x=>(
+                    <div key={x.mem.id} style={{display:"flex",alignItems:"center",gap:7,padding:"7px 11px",background:D("#FFF7ED","#2B1808"),borderRadius:9,border:"1px solid "+bd,flex:"1",minWidth:145}}>
+                      <div style={{width:24,height:24,borderRadius:"50%",background:"#B87050",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:"#fff",flexShrink:0}}>{x.mem.name[0]}</div>
+                      <div style={{flex:1,minWidth:0}}><div style={{fontSize:12,fontWeight:700,color:tc}}>{x.mem.name}</div><div style={{fontSize:9,color:sc}}>{x.mem.phone}</div></div>
+                      <div style={{fontSize:13,fontWeight:800,color:"#B87050"}}>{x.cnt}<span style={{fontSize:9,fontWeight:400,color:sc}}>本</span></div>
+                    </div>
+                  ))}
+                </div>
+              </div>}
+              <div style={{background:bg,borderRadius:11,border:"1px solid "+bd,overflow:"hidden"}}>
+                <div style={{padding:"11px 13px",borderBottom:"2px solid "+D("#FED7AA","#3A2010")}}>
+                  <span style={{fontFamily:"Playfair Display,serif",fontSize:13,color:tc}}>本月借閱明細（共 {mBr.length} 筆）</span>
+                </div>
+                {mBr.length===0?<div style={{textAlign:"center",color:sc,fontSize:12,padding:"14px 0"}}>本月無借閱紀錄</div>:<table>
+                  <thead><tr><th>書名</th><th>借閱人</th><th>借閱日</th><th>應還日</th><th>歸還日</th><th>狀態</th></tr></thead>
+                  <tbody>{mBr.map(b=>{const bk=books.find(x=>x.id===b.bookId),mb=members.find(x=>x.id===b.memberId);return<tr key={b.id}>
+                    <td><div style={{display:"flex",alignItems:"center",gap:5}}>{bk&&<Cover book={bk} w={15} h={21}/>}<span style={{fontWeight:600,fontSize:11,color:tc}}>{bk?bk.title:"—"}</span></div></td>
+                    <td style={{fontSize:11,color:tc}}>{mb?mb.name:"—"}</td>
+                    <td style={{fontSize:10,color:sc}}>{b.borrowDate}</td>
+                    <td style={{fontSize:10,color:sc}}>{b.dueDate}</td>
+                    <td style={{fontSize:10,color:b.returnDate?"#059669":sc}}>{b.returnDate||"—"}</td>
+                    <td><Tag c={b.status==="returned"?"已歸還":b.status==="overdue"?"⚠逾期":"借出中"} s={b.status==="returned"?{background:"#D1FAE5",color:"#065F46"}:b.status==="overdue"?{background:"#FEF3C7",color:"#92400E"}:{background:"#FEE2E2",color:"#991B1B"}}/></td>
+                  </tr>;})}
+                  </tbody>
+                </table>}
+              </div>
+            </div>;
+          })()}
+
+          {view==="members"&&isAdm&&<>
+            <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12,padding:"10px 14px",background:D("#FFF7ED","#2B1808"),borderRadius:10,border:"1px solid "+D("#FDBA74","#3A2010"),flexWrap:"wrap"}}>
+              <span style={{fontSize:12,fontWeight:700,color:D("#9A3412","#B09060")}}>📚 借閱上限管理</span>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginLeft:"auto"}}>
+                <span style={{fontSize:11,color:D("#9A3412","#B09060")}}>每位會員最多可借：</span>
+                <div style={{display:"flex",alignItems:"center",gap:5}}>
+                  <button onClick={()=>setBorrowLimit(l=>Math.max(1,l-1))} style={{width:26,height:26,borderRadius:6,border:"1px solid "+D("#FDBA74","#3A2010"),background:D("#fff","#231508"),color:D("#B87050","#D4A060"),cursor:"pointer",fontSize:14,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>−</button>
+                  <span style={{fontSize:16,fontWeight:800,color:D("#B87050","#F5C060"),minWidth:24,textAlign:"center",fontFamily:"Playfair Display,serif"}}>{borrowLimit}</span>
+                  <button onClick={()=>setBorrowLimit(l=>Math.min(20,l+1))} style={{width:26,height:26,borderRadius:6,border:"1px solid "+D("#FDBA74","#3A2010"),background:D("#fff","#231508"),color:D("#B87050","#D4A060"),cursor:"pointer",fontSize:14,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>＋</button>
+                </div>
+                <span style={{fontSize:10,color:D("#9A3412","#B09060")}}>本（可設 1–20）</span>
+              </div>
+            </div>
+            <div className="tc"><table>
+            <thead><tr><th>姓名</th><th>Email</th><th>電話</th><th>加入日期</th><th>借閱中 / 上限</th></tr></thead>
+            <tbody>{members.map(m=>{const act=borrows.filter(b=>b.memberId===m.id&&(b.status==="active"||b.status==="overdue")).length;const atLimit=act>=borrowLimit;const near=act===borrowLimit-1;return(
+              <tr key={m.id} style={{background:atLimit?D("#FEF2F2","#3A1010"):near?D("#FFFBEB","#2A2000"):""}}>
+                <td><div style={{display:"flex",alignItems:"center",gap:5}}><div style={{width:22,height:22,borderRadius:"50%",background:atLimit?"#DC2626":D("#FFF7ED","#2B1808"),border:"1px solid "+(atLimit?"#FECACA":D("#FDBA74","#3A2010")),display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700,color:atLimit?"#fff":D("#B87050","#D4A060")}}>{m.name[0]}</div><span style={{fontWeight:600}}>{m.name}</span></div></td>
+                <td style={{color:D("#9A3412","#B09060"),fontSize:10}}>{m.email}</td><td style={{fontSize:10}}>{m.phone}</td><td style={{fontSize:10}}>{m.joinDate}</td>
+                <td>
+                  <div style={{display:"flex",alignItems:"center",gap:7}}>
+                    <div style={{flex:1,height:6,background:D("#FFF3E0","#2B1808"),borderRadius:3,overflow:"hidden",minWidth:60}}>
+                      <div style={{height:"100%",borderRadius:3,background:atLimit?"#DC2626":near?"#D97706":"#10B981",width:Math.min(act/borrowLimit*100,100)+"%",transition:"width 0.3s"}}/>
+                    </div>
+                    <span style={{fontSize:11,fontWeight:700,color:atLimit?"#DC2626":near?D("#D97706","#F0C060"):D("#059669","#10B981"),minWidth:40,textAlign:"right"}}>{act} / {borrowLimit}</span>
+                    {atLimit&&<Tag c="已達上限" s={{background:"#FEE2E2",color:"#991B1B"}}/>}
+                  </div>
+                </td>
+              </tr>
+            );})}
+            </tbody>
+          </table></div>
+          </>}
+
+          {/* 📋 我的紀錄 */}
+          {view==="myrecord"&&(()=>{
+            const bg=D("#fff","#231508"),bd=D("#FDBA74","#3A2010"),tc=D("#431407","#F0D5A5"),sc=D("#9A3412","#B09060");
+            const found=myQ.trim()?members.find(m=>m.name.includes(myQ.trim())||m.phone.includes(myQ.trim())):null;
+            const myBr=found?borrows.filter(b=>b.memberId===found.id):[];
+            const actBr2=myBr.filter(b=>b.status==="active"||b.status==="overdue");
+            const myRvs=found?rvs.filter(()=>true):[];
+            return<div style={{maxWidth:700}}>
+              <div style={{background:bg,borderRadius:11,padding:"16px 18px",border:"1px solid "+bd,marginBottom:14}}>
+                <div style={{fontFamily:"Playfair Display,serif",fontSize:14,color:tc,marginBottom:10,paddingBottom:8,borderBottom:"2px solid "+D("#FED7AA","#3A2010")}}>📋 我的借閱紀錄與預約清單</div>
+                <div style={{fontSize:11,color:sc,marginBottom:9}}>請輸入您的姓名或電話查詢您的記錄</div>
+                <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                  <div style={{flex:1,position:"relative"}}>
+                    <span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:D("#C98060","#B09060"),fontSize:11,pointerEvents:"none"}}>⌕</span>
+                    <input value={myQ} onChange={e=>setMyQ(e.target.value)} placeholder="輸入姓名或電話…" style={{paddingLeft:26}}/>
+                  </div>
+                  {myQ&&<button onClick={()=>setMyQ("")} style={{padding:"5px 10px",borderRadius:6,border:"1px solid "+bd,background:"transparent",color:sc,cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>清除</button>}
+                </div>
+                {myQ&&!found&&<div style={{marginTop:8,padding:"8px 11px",background:D("#FEF3C7","#2A2000"),borderRadius:7,border:"1px solid "+D("#FCD34D","#5A4000"),fontSize:11,color:D("#92400E","#F0C060")}}>⚠ 找不到符合的會員，請確認姓名或電話是否正確</div>}
+                {found&&<div style={{marginTop:9,padding:"10px 13px",background:D("#F0FDF4","#0A2010"),borderRadius:8,border:"1px solid "+D("#86EFAC","#1A5030"),display:"flex",alignItems:"center",gap:10}}>
+                  <div style={{width:32,height:32,borderRadius:"50%",background:"#B87050",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,fontWeight:700,color:"#fff",flexShrink:0}}>{found.name[0]}</div>
+                  <div><div style={{fontSize:13,fontWeight:700,color:tc}}>{found.name}</div><div style={{fontSize:10,color:sc}}>{found.phone} · 加入日期：{found.joinDate}</div></div>
+                  <div style={{marginLeft:"auto",textAlign:"right"}}><div style={{fontSize:13,fontWeight:800,color:actBr2.length>=borrowLimit?"#DC2626":"#059669"}}>{actBr2.length} / {borrowLimit}</div><div style={{fontSize:9,color:sc}}>目前借閱/上限</div></div>
+                </div>}
+              </div>
+              {found&&<>
+                <div className="tabs">
+                  <button className={"tab"+(myTab==="borrow"?" on":"")} onClick={()=>setMyTab("borrow")}>借閱紀錄 ({actBr2.length} 本中)</button>
+                  <button className={"tab"+(myTab==="hist"?" on":"")} onClick={()=>setMyTab("hist")}>歷史紀錄 ({myBr.filter(b=>b.status==="returned").length} 筆)</button>
+                  <button className={"tab"+(myTab==="rvs"?" on":"")} onClick={()=>setMyTab("rvs")}>我的預約 ({rvs.length} 筆)</button>
+                </div>
+                {myTab==="borrow"&&(actBr2.length===0
+                  ?<div style={{background:bg,borderRadius:10,padding:"18px",border:"1px solid "+bd,textAlign:"center",color:sc,fontSize:12}}>目前沒有借閱中的書目</div>
+                  :<div style={{display:"flex",flexDirection:"column",gap:9}}>
+                    {actBr2.map(b=>{const bk=books.find(x=>x.id===b.bookId);const days=Math.floor((new Date(b.dueDate)-new Date())/86400000);const isOD=b.status==="overdue"||days<0;const near=days>=0&&days<=3;return(
+                      <div key={b.id} style={{background:isOD?D("#FEF2F2","#2A0808"):near?D("#FFFBEB","#1A1000"):bg,borderRadius:10,padding:"12px 14px",border:"1px solid "+(isOD?D("#FECACA","#5A1010"):near?D("#FDE68A","#4A3000"):bd),display:"flex",alignItems:"center",gap:11}}>
+                        {bk&&<Cover book={bk} w={38} h={53} onClick={()=>{setDet(bk);setVm(v=>({...v,[bk.id]:(v[bk.id]||0)+1}));}}/>}
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{fontSize:13,fontWeight:700,color:tc,marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{bk?bk.title:"—"}</div>
+                          <div style={{fontSize:10,color:sc,marginBottom:1}}>{bk?bk.author:""} · 借閱日：{b.borrowDate}</div>
+                          <div style={{fontSize:10,color:sc}}>應還日：<b style={{color:isOD?"#DC2626":near?"#D97706":tc}}>{b.dueDate}</b></div>
+                        </div>
+                        <div style={{textAlign:"right",flexShrink:0}}>
+                          {isOD?<div style={{fontSize:12,fontWeight:800,color:"#DC2626"}}>逾期 {Math.abs(days)} 天</div>:days===0?<div style={{fontSize:12,fontWeight:800,color:"#D97706"}}>今日到期</div>:<div style={{fontSize:12,fontWeight:700,color:near?"#D97706":D("#059669","#10B981")}}>{days} 天後</div>}
+                          <Tag c={isOD?"⚠ 逾期":near?"即將到期":"借閱中"} s={{marginTop:4,...(isOD?{background:"#FEF3C7",color:"#92400E"}:near?{background:"#FEF3C7",color:"#D97706"}:{background:"#D1FAE5",color:"#065F46"})}}/>
+                        </div>
+                      </div>
+                    );})}
+                  </div>
+                )}
+                {myTab==="hist"&&(myBr.filter(b=>b.status==="returned").length===0
+                  ?<div style={{background:bg,borderRadius:10,padding:"18px",border:"1px solid "+bd,textAlign:"center",color:sc,fontSize:12}}>尚無歸還紀錄</div>
+                  :<div style={{background:bg,borderRadius:10,border:"1px solid "+bd,overflow:"hidden"}}>
+                    <table><thead><tr><th>書名</th><th>借閱日</th><th>歸還日</th></tr></thead>
+                    <tbody>{myBr.filter(b=>b.status==="returned").map(b=>{const bk=books.find(x=>x.id===b.bookId);return<tr key={b.id}>
+                      <td><div style={{display:"flex",alignItems:"center",gap:6,cursor:"pointer"}} onClick={()=>bk&&(setDet(bk),setVm(v=>({...v,[bk.id]:(v[bk.id]||0)+1})))}>{bk&&<Cover book={bk} w={18} h={25}/>}<span style={{fontWeight:600,fontSize:11,color:tc}}>{bk?bk.title:"—"}</span></div></td>
+                      <td style={{fontSize:10,color:sc}}>{b.borrowDate}</td>
+                      <td style={{fontSize:10,color:D("#059669","#10B981"),fontWeight:600}}>{b.returnDate}</td>
+                    </tr>;})}
+                    </tbody></table>
+                  </div>
+                )}
+                {myTab==="rvs"&&(rvs.length===0
+                  ?<div style={{background:bg,borderRadius:10,padding:"18px",border:"1px solid "+bd,textAlign:"center",color:sc,fontSize:12}}>目前沒有預約中的書目</div>
+                  :<div style={{display:"flex",flexDirection:"column",gap:8}}>
+                    {rvs.map(r=>{const bk=books.find(x=>x.id===r.bookId);const av=bk&&avCp(bk.id).length>0;return(
+                      <div key={r.id} style={{background:bg,borderRadius:10,padding:"11px 13px",border:"1px solid "+(av?D("#86EFAC","#1A5030"):bd),display:"flex",alignItems:"center",gap:10}}>
+                        {bk&&<Cover book={bk} w={32} h={44} onClick={()=>{setDet(bk);setVm(v=>({...v,[bk.id]:(v[bk.id]||0)+1}));}}/>}
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{fontSize:12,fontWeight:700,color:tc,marginBottom:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{bk?bk.title:"—"}</div>
+                          <div style={{fontSize:10,color:sc}}>預約日：{r.date}</div>
+                        </div>
+                        {av?<Tag c="✓ 可借閱" s={{background:"#D1FAE5",color:"#065F46"}}/>:<Tag c="排隊中" s={{background:D("#FEE2E2","#3A1010"),color:"#991B1B"}}/>}
+                      </div>
+                    );})}
+                  </div>
+                )}
+              </>}
+            </div>;
+          })()}
+
+          {/* ⭐ 書目評分 */}
+          {view==="ratings"&&(()=>{
+            const bg=D("#fff","#231508"),bd=D("#FDBA74","#3A2010"),tc=D("#431407","#F0D5A5"),sc=D("#9A3412","#B09060");
+            const Stars=({val,onChange})=><div style={{display:"flex",gap:2}}>{[1,2,3,4,5].map(i=><span key={i} onClick={()=>onChange&&onChange(i)} style={{fontSize:18,cursor:onChange?"pointer":"default",color:i<=val?"#F59E0B":"#D1D5DB",lineHeight:1}}>{i<=val?"★":"☆"}</span>)}</div>;
+            const editing=ratingEdit;
+            const saveRating=()=>{if(!editing||!editing.stars){toast("請先選擇星數");return;}setRatings(p=>({...p,[editing.bookId]:{stars:editing.stars,comment:(editing.comment||"").trim()}}));setRatingEdit(null);toast("✓ 評分已儲存");};
+            return<div style={{maxWidth:900}}>
+              <div style={{fontSize:11,color:sc,marginBottom:13}}>點擊書目卡片的「評分」即可留下星數與短評 · 已評分：{Object.keys(ratings).length} 本</div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(185px,1fr))",gap:11}}>
+                {books.map(bk=>{
+                  const r=ratings[bk.id];
+                  const isEditing=editing&&editing.bookId===bk.id;
+                  return<div key={bk.id} style={{background:bg,borderRadius:11,padding:13,border:"1px solid "+(r?D("#FCD34D","#5A4000"):bd)}}>
+                    <div style={{display:"flex",gap:8,marginBottom:8}}>
+                      <Cover book={bk} w={36} h={50} onClick={()=>{setDet(bk);setVm(v=>({...v,[bk.id]:(v[bk.id]||0)+1}));}}/>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:11,fontWeight:700,color:tc,lineHeight:1.3,marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{bk.title}</div>
+                        <div style={{fontSize:9,color:sc,marginBottom:5}}>{bk.author}</div>
+                        {r?<Stars val={r.stars}/>:<div style={{fontSize:10,color:sc}}>☆ 尚未評分</div>}
+                      </div>
+                    </div>
+                    {r&&r.comment&&!isEditing&&<div style={{fontSize:10,color:sc,lineHeight:1.5,padding:"5px 7px",background:D("#FFF7ED","#2B1808"),borderRadius:6,marginBottom:7,borderLeft:"2px solid #FDBA74"}}>「{r.comment.slice(0,40)}{r.comment.length>40?"…":""}」</div>}
+                    {!isEditing?<button onClick={()=>setRatingEdit({bookId:bk.id,stars:r?r.stars:0,comment:r?r.comment:""})} style={{width:"100%",padding:"5px",borderRadius:6,border:"1px solid "+bd,background:"transparent",color:sc,cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>{r?"✏ 修改評分":"☆ 為此書評分"}</button>
+                    :<div style={{borderTop:"1px solid "+bd,paddingTop:9}}>
+                      <div style={{fontSize:10,color:sc,marginBottom:5,fontWeight:600}}>您的評分</div>
+                      <Stars val={editing.stars} onChange={s=>setRatingEdit(p=>({...p,stars:s}))}/>
+                      <textarea value={editing.comment||""} onChange={e=>setRatingEdit(p=>({...p,comment:e.target.value}))} placeholder="留下一句話心得…（選填）" rows={2} style={{marginTop:7,resize:"none",fontSize:11}}/>
+                      <div style={{display:"flex",gap:6,marginTop:7}}>
+                        <Btn c="✓ 儲存" sm onClick={saveRating}/>
+                        {r&&<Btn c="移除" sm v="r" onClick={()=>{setRatings(p=>{const n={...p};delete n[bk.id];return n;});setRatingEdit(null);toast("評分已移除");}}/>}
+                        <Btn c="取消" sm v="o" onClick={()=>setRatingEdit(null)}/>
+                      </div>
+                    </div>}
+                  </div>;
+                })}
+              </div>
+            </div>;
+          })()}
+
+          {/* 🆕 新書上架 */}
+          {view==="newbooks"&&(()=>{
+            const bg=D("#fff","#231508"),bd=D("#FDBA74","#3A2010"),tc=D("#431407","#F0D5A5"),sc=D("#9A3412","#B09060");
+            const sorted=[...books].sort((a,b)=>new Date(b.addedDate)-new Date(a.addedDate));
+            const now2=new Date();
+            const ageDays=b=>Math.floor((now2-new Date(b.addedDate))/86400000);
+            const isNew=b=>ageDays(b)<=30;
+            return<div style={{maxWidth:900}}>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14,flexWrap:"wrap"}}>
+                <div style={{fontFamily:"Playfair Display,serif",fontSize:14,color:tc}}>依入館日期排列，<b style={{color:D("#059669","#10B981")}}>{sorted.filter(b=>isNew(b)).length}</b> 本近 30 天新入館</div>
+              </div>
+              <div style={{display:"flex",flexDirection:"column",gap:9}}>
+                {sorted.map((bk,i)=>{
+                  const color=gc(bk),code=gk(bk),age=ageDays(bk),fresh=age<=7,newish=age<=30;
+                  const cc=cpCnt(bk.id);
+                  return<div key={bk.id} style={{background:bg,borderRadius:10,padding:"11px 14px",border:"1px solid "+(fresh?D("#86EFAC","#1A5030"):newish?D("#FCD34D","#5A4000"):bd),display:"flex",alignItems:"center",gap:12,cursor:"pointer"}} onClick={()=>{setDet(bk);setVm(v=>({...v,[bk.id]:(v[bk.id]||0)+1}));}}>
+                    <div style={{flexShrink:0,width:22,textAlign:"center"}}>
+                      {i===0?<span style={{fontSize:14}}>🥇</span>:i===1?<span style={{fontSize:14}}>🥈</span>:i===2?<span style={{fontSize:14}}>🥉</span>:<span style={{fontSize:11,color:sc,fontWeight:700}}>#{i+1}</span>}
+                    </div>
+                    <Cover book={bk} w={36} h={50}/>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:12,fontWeight:700,color:tc,marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{bk.title}</div>
+                      <div style={{fontSize:10,color:sc,marginBottom:4}}>{bk.author}</div>
+                      <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+                        <span style={{background:color+"18",color,padding:"1px 5px",borderRadius:3,fontSize:9,fontWeight:700,fontFamily:"monospace"}}>{code}</span>
+                        {bk.type==="physical"?<Tag c={cc.avail>0?"可借閱":"借出中"} s={cc.avail>0?{background:"#D1FAE5",color:"#065F46"}:{background:"#FEE2E2",color:"#991B1B"}}/>:<Tag c="電子書" s={{background:"#DBEAFE",color:"#1E40AF"}}/>}
+                        {ratings[bk.id]&&<span style={{fontSize:10,color:"#F59E0B"}}>{"★".repeat(ratings[bk.id].stars)}</span>}
+                      </div>
+                    </div>
+                    <div style={{textAlign:"right",flexShrink:0}}>
+                      <div style={{fontSize:10,color:sc,marginBottom:3}}>{bk.addedDate}</div>
+                      {fresh?<Tag c="🆕 本週入館" s={{background:D("#D1FAE5","#0A2A10"),color:"#065F46"}}/>:newish?<Tag c="近 30 天" s={{background:D("#FEF3C7","#2A2000"),color:D("#92400E","#F0C060")}}/>:<Tag c={age+"天前"} s={{background:D("#F3F4F6","#1A1A1A"),color:D("#6B7280","#888")}}/>}
+                    </div>
+                  </div>;
+                })}
+              </div>
+            </div>;
+          })()}
+
+          {/* 🎲 隨機推薦 */}
+          {view==="picks"&&(()=>{
+            const bg=D("#fff","#231508"),bd=D("#FDBA74","#3A2010"),tc=D("#431407","#F0D5A5"),sc=D("#9A3412","#B09060");
+            const shuffle=()=>{
+              const avail=books.filter(b=>b.type==="physical"&&avCp(b.id).length>0);
+              const eb=books.filter(b=>b.type==="ebook");
+              const pick=(arr,n)=>{const s=[...arr].sort(()=>Math.random()-0.5);return s.slice(0,Math.min(n,s.length));};
+              setPicks([...pick(avail,3),...pick(eb,1)].sort(()=>Math.random()-0.5));
+            };
+            return<div style={{maxWidth:860}}>
+              <div style={{textAlign:"center",padding:"28px 0 20px"}}>
+                <div style={{fontSize:40,marginBottom:12}}>🎲</div>
+                <div style={{fontFamily:"Playfair Display,serif",fontSize:20,color:tc,marginBottom:8}}>今日推薦</div>
+                <div style={{fontSize:12,color:sc,marginBottom:20,maxWidth:300,margin:"0 auto 20px"}}>系統隨機為您抽出可借閱書目，每次點擊都有不同驚喜</div>
+                <Btn c="🎲 隨機抽書" s={{fontSize:14,padding:"10px 28px",borderRadius:25}} onClick={shuffle}/>
+              </div>
+              {picks.length>0&&<>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(195px,1fr))",gap:13,marginTop:8}}>
+                  {picks.map((bk,i)=>{
+                    const color=gc(bk),code=gk(bk),cc=cpCnt(bk.id),r=ratings[bk.id];
+                    const labels=["✨ 為你推薦","💡 試試看這本","📖 今日選書","🌟 隨機抽到"];
+                    return<div key={bk.id} style={{background:bg,borderRadius:13,padding:16,border:"2px solid "+color+"40",position:"relative",overflow:"hidden"}}>
+                      <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:"linear-gradient(90deg,"+color+","+color+"80)"}}/>
+                      <div style={{fontSize:10,color:color,fontWeight:700,marginBottom:9}}>{labels[i]||labels[0]}</div>
+                      <div style={{display:"flex",gap:10,marginBottom:10,cursor:"pointer"}} onClick={()=>{setDet(bk);setVm(v=>({...v,[bk.id]:(v[bk.id]||0)+1}));}}>
+                        <Cover book={bk} w={52} h={72}/>
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{fontSize:12,fontWeight:700,color:tc,lineHeight:1.4,marginBottom:4,overflow:"hidden",textOverflow:"ellipsis",display:"-webkit-box",WebkitLineClamp:3,WebkitBoxOrient:"vertical"}}>{bk.title}</div>
+                          <div style={{fontSize:10,color:sc,marginBottom:5}}>{bk.author}</div>
+                          <span style={{background:color+"18",color,padding:"1px 5px",borderRadius:3,fontSize:9,fontWeight:700,fontFamily:"monospace"}}>{code}</span>
+                        </div>
+                      </div>
+                      {bk.desc&&<div style={{fontSize:10,color:sc,lineHeight:1.55,marginBottom:9}}>{bk.desc.slice(0,55)}…</div>}
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:9}}>
+                        {bk.type==="physical"?<Tag c={cc.avail>0?"✓ 現可借閱":"排隊中"} s={cc.avail>0?{background:"#D1FAE5",color:"#065F46"}:{background:"#FEE2E2",color:"#991B1B"}}/>:<Tag c="電子書" s={{background:"#DBEAFE",color:"#1E40AF"}}/>}
+                        {r&&<div style={{display:"flex",gap:1}}>{[1,2,3,4,5].map(i2=><span key={i2} style={{fontSize:12,color:i2<=r.stars?"#F59E0B":"#D1D5DB"}}>{i2<=r.stars?"★":"☆"}</span>)}</div>}
+                      </div>
+                      <div style={{display:"flex",gap:6}}>
+                        <Btn c="查看詳情" sm v="o" s={{flex:1,border:"1px solid "+color,color}} onClick={()=>{setDet(bk);setVm(v=>({...v,[bk.id]:(v[bk.id]||0)+1}));}}/>
+                        <button onClick={()=>{const f=favs.has(bk.id);setFavs(s=>{const n=new Set(s);f?n.delete(bk.id):n.add(bk.id);return n;});toast(f?"已移除收藏":"✓ 已加入收藏");}} style={{padding:"4px 8px",borderRadius:6,border:"1px solid "+(favs.has(bk.id)?"#EF4444":bd),background:"transparent",color:favs.has(bk.id)?"#EF4444":sc,cursor:"pointer",fontSize:12}}>{favs.has(bk.id)?"♥":"♡"}</button>
+                      </div>
+                    </div>;
+                  })}
+                </div>
+                <div style={{textAlign:"center",marginTop:16}}><Btn c="🎲 再抽一次" v="o" onClick={shuffle}/></div>
+              </>}
+            </div>;
+          })()}
+
+          {/* ◈ 館藏總覽儀表板（讀者版） */}
+          {view==="overview"&&(()=>{
+            const bg=D("#fff","#231508"),bd=D("#FDBA74","#3A2010"),tc=D("#431407","#F0D5A5"),sc=D("#9A3412","#B09060");
+            const phys=books.filter(b=>b.type==="physical");
+            const eb=books.filter(b=>b.type==="ebook");
+            const avail=phys.filter(b=>avCp(b.id).length>0||b.status==="available");
+            const borrowed=borrows.filter(b=>b.status==="active"||b.status==="overdue").length;
+            const overdue=borrows.filter(b=>b.status==="overdue").length;
+            // top books by views
+            const topBooks=[...books].sort((a,b2)=>(vm[b2.id]||b2.views||0)-(vm[a.id]||a.views||0)).slice(0,6);
+            // top rated
+            const topRated=[...books].filter(b=>ratings[b.id]&&ratings[b.id].stars>0).sort((a,b2)=>ratings[b2.id].stars-ratings[a.id].stars).slice(0,5);
+            // category breakdown
+            const catData=CATS.map(c=>({cat:c,total:books.filter(b=>b.category===c).length,phys:phys.filter(b=>b.category===c).length,avail:phys.filter(b=>b.category===c&&avCp(b.id).length>0).length})).filter(d=>d.total>0).sort((a,b2)=>b2.total-a.total);
+            const maxCat=catData[0]?catData[0].total:1;
+            // recent adds
+            const recent=[...books].sort((a,b2)=>new Date(b2.addedDate)-new Date(a.addedDate)).slice(0,4);
+            const today2=new Date().toLocaleDateString("zh-TW",{year:"numeric",month:"long",day:"numeric"});
+            return<div style={{maxWidth:980}}>
+              {/* 頁首 */}
+              <div style={{background:"linear-gradient(135deg,#B87050,#D4905A)",borderRadius:14,padding:"20px 24px",marginBottom:18,color:"#fff",position:"relative",overflow:"hidden"}}>
+                <div style={{position:"absolute",right:20,top:"50%",transform:"translateY(-50%)",fontSize:64,opacity:0.12}}>📚</div>
+                <div style={{fontFamily:"Playfair Display,serif",fontSize:22,fontWeight:700,marginBottom:4}}>溫書閣　館藏總覽</div>
+                <div style={{fontSize:11,opacity:0.85}}>{today2}　·　讀者服務資訊</div>
+              </div>
+
+              {/* 四格統計卡 */}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:18}}>
+                {[
+                  {icon:"📗",val:phys.length,label:"實體藏書",sub:"冊",color:"#B87050",bg:D("#FFF7ED","#2B1808"),click:()=>nav("catalog")},
+                  {icon:"💻",val:eb.length,label:"電子書目",sub:"本",color:"#3B82F6",bg:D("#EFF6FF","#0A1228"),click:()=>nav("ebooks")},
+                  {icon:"✅",val:avail.length,label:"現可借閱",sub:"冊",color:"#059669",bg:D("#F0FDF4","#0A2010"),click:()=>nav("catalog")},
+                  {icon:"👥",val:members.length,label:"館藏會員",sub:"人",color:"#9333EA",bg:D("#F5F3FF","#150A28"),click:null},
+                ].map((s,i)=>(
+                  <div key={i} onClick={s.click||undefined} style={{background:s.bg,borderRadius:12,padding:"15px 16px",border:"1px solid "+s.color+"25",cursor:s.click?"pointer":"default",transition:"transform 0.15s"}} onMouseEnter={e=>{if(s.click)e.currentTarget.style.transform="translateY(-2px)";}} onMouseLeave={e=>{e.currentTarget.style.transform="";}}>
+                    <div style={{fontSize:18,marginBottom:6}}>{s.icon}</div>
+                    <div style={{fontSize:24,fontWeight:700,color:s.color,fontFamily:"Playfair Display,serif",lineHeight:1}}>{s.val}<span style={{fontSize:12,fontWeight:400,marginLeft:3}}>{s.sub}</span></div>
+                    <div style={{fontSize:10,color:s.color,fontWeight:600,marginTop:4}}>{s.label}</div>
+                    {s.click&&<div style={{fontSize:9,color:s.color,opacity:0.7,marginTop:2}}>點擊前往 →</div>}
+                  </div>
+                ))}
+              </div>
+
+              {/* 借閱狀況橫幅 */}
+              <div style={{background:bg,borderRadius:12,padding:"13px 18px",border:"1px solid "+bd,marginBottom:18,display:"flex",alignItems:"center",gap:20,flexWrap:"wrap"}}>
+                <div style={{fontFamily:"Playfair Display,serif",fontSize:13,color:tc,flexShrink:0}}>目前借閱狀況</div>
+                {[
+                  {label:"借出中",val:borrowed,color:"#EF4444"},
+                  {label:"逾期未還",val:overdue,color:"#DC2626"},
+                  {label:"預約等候",val:rvs.length,color:"#D97706"},
+                  {label:"我的收藏",val:favs.size,color:"#EF4444"},
+                ].map((s,i)=>(
+                  <div key={i} style={{display:"flex",alignItems:"baseline",gap:4}}>
+                    <span style={{fontSize:20,fontWeight:800,color:s.color,fontFamily:"Playfair Display,serif"}}>{s.val}</span>
+                    <span style={{fontSize:10,color:sc}}>{s.label}</span>
+                  </div>
+                ))}
+                <div style={{marginLeft:"auto",display:"flex",gap:8,flexShrink:0}}>
+                  <Btn c="🎲 隨機推薦" sm v="o" onClick={()=>nav("picks")}/>
+                  <Btn c="🆕 新書上架" sm onClick={()=>nav("newbooks")}/>
+                </div>
+              </div>
+
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
+                {/* 熱門書目 */}
+                <div style={{background:bg,borderRadius:12,padding:"14px 16px",border:"1px solid "+bd}}>
+                  <div style={{fontFamily:"Playfair Display,serif",fontSize:13,color:tc,marginBottom:12,paddingBottom:7,borderBottom:"2px solid "+D("#FED7AA","#3A2010")}}>🏆 最多人點閱</div>
+                  {topBooks.map((bk,i)=>{
+                    const v=vm[bk.id]||bk.views||0;
+                    const mx=Math.max(...topBooks.map(b=>vm[b.id]||b.views||0),1);
+                    const ms=["🥇","🥈","🥉"];
+                    return<div key={bk.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:9,cursor:"pointer"}} onClick={()=>{setDet(bk);setVm(vv=>({...vv,[bk.id]:(vv[bk.id]||0)+1}));}}>
+                      <span style={{fontSize:i<3?14:11,width:18,textAlign:"center",flexShrink:0}}>{i<3?ms[i]:i+1}</span>
+                      <Cover book={bk} w={26} h={36}/>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:11,fontWeight:700,color:tc,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginBottom:2}}>{bk.title}</div>
+                        <div style={{height:4,background:D("#FFF3E0","#2B1808"),borderRadius:2,overflow:"hidden"}}>
+                          <div style={{height:"100%",background:gc(bk),borderRadius:2,width:(v/mx*100)+"%"}}/>
+                        </div>
+                      </div>
+                      <span style={{fontSize:11,fontWeight:700,color:sc,minWidth:28,textAlign:"right",flexShrink:0}}>{v}</span>
+                    </div>;
+                  })}
+                </div>
+
+                {/* 分類館藏 */}
+                <div style={{background:bg,borderRadius:12,padding:"14px 16px",border:"1px solid "+bd}}>
+                  <div style={{fontFamily:"Playfair Display,serif",fontSize:13,color:tc,marginBottom:12,paddingBottom:7,borderBottom:"2px solid "+D("#FED7AA","#3A2010")}}>📚 各分類館藏</div>
+                  <div style={{display:"flex",flexDirection:"column",gap:7}}>
+                    {catData.slice(0,8).map(d=>(
+                      <div key={d.cat} style={{display:"flex",alignItems:"center",gap:7,cursor:"pointer"}} onClick={()=>{setCatF(d.cat);setTypeF("全部");setQ("");nav("catalog");}}>
+                        <span style={{fontSize:9,fontWeight:700,fontFamily:"monospace",color:CLR[d.cat]||"#B87050",width:20,flexShrink:0}}>{KOD[d.cat]||"?"}</span>
+                        <div style={{flex:1}}>
+                          <div style={{display:"flex",justifyContent:"space-between",marginBottom:2}}>
+                            <span style={{fontSize:10,color:tc,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:110}}>{d.cat}</span>
+                            <span style={{fontSize:10,color:CLR[d.cat]||"#B87050",fontWeight:700,flexShrink:0,marginLeft:4}}>{d.avail}<span style={{color:sc,fontWeight:400}}>/{d.phys}</span></span>
+                          </div>
+                          <div style={{height:5,background:D("#FFF3E0","#2B1808"),borderRadius:3,overflow:"hidden"}}>
+                            <div style={{height:"100%",background:CLR[d.cat]||"#B87050",borderRadius:3,width:(d.total/maxCat*100)+"%"}}/>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {catData.length>8&&<div style={{fontSize:10,color:sc,textAlign:"center",cursor:"pointer"}} onClick={()=>nav("categories")}>另有 {catData.length-8} 個分類 → 查看全部</div>}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+                {/* 最新入館 */}
+                <div style={{background:bg,borderRadius:12,padding:"14px 16px",border:"1px solid "+bd}}>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,paddingBottom:7,borderBottom:"2px solid "+D("#FED7AA","#3A2010")}}>
+                    <div style={{fontFamily:"Playfair Display,serif",fontSize:13,color:tc}}>🆕 最新入館</div>
+                    <button onClick={()=>nav("newbooks")} style={{fontSize:10,color:D("#B87050","#D4A060"),background:"transparent",border:"none",cursor:"pointer"}}>查看全部 →</button>
+                  </div>
+                  {recent.map(bk=>(
+                    <div key={bk.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:9,cursor:"pointer"}} onClick={()=>{setDet(bk);setVm(v=>({...v,[bk.id]:(v[bk.id]||0)+1}));}}>
+                      <Cover book={bk} w={28} h={38}/>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:11,fontWeight:700,color:tc,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{bk.title}</div>
+                        <div style={{fontSize:9,color:sc}}>{bk.author} · {bk.addedDate}</div>
+                      </div>
+                      {bk.type==="physical"?<Tag c={avCp(bk.id).length>0?"可借":"借出"} s={avCp(bk.id).length>0?{background:"#D1FAE5",color:"#065F46"}:{background:"#FEE2E2",color:"#991B1B"}}/>:<Tag c="電子書" s={{background:"#DBEAFE",color:"#1E40AF"}}/>}
+                    </div>
+                  ))}
+                </div>
+
+                {/* 讀者評分 */}
+                <div style={{background:bg,borderRadius:12,padding:"14px 16px",border:"1px solid "+bd}}>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,paddingBottom:7,borderBottom:"2px solid "+D("#FED7AA","#3A2010")}}>
+                    <div style={{fontFamily:"Playfair Display,serif",fontSize:13,color:tc}}>⭐ 讀者評分榜</div>
+                    <button onClick={()=>nav("ratings")} style={{fontSize:10,color:D("#B87050","#D4A060"),background:"transparent",border:"none",cursor:"pointer"}}>前往評分 →</button>
+                  </div>
+                  {topRated.length===0?(
+                    <div style={{textAlign:"center",padding:"16px 0",color:sc,fontSize:11}}>
+                      <div style={{fontSize:28,marginBottom:8}}>☆</div>
+                      <div>還沒有評分紀錄</div>
+                      <button onClick={()=>nav("ratings")} style={{marginTop:10,padding:"5px 14px",borderRadius:16,border:"1px solid "+bd,background:"transparent",color:D("#B87050","#D4A060"),cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>為書目評分</button>
+                    </div>
+                  ):topRated.map((bk,i)=>(
+                    <div key={bk.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:9,cursor:"pointer"}} onClick={()=>{setDet(bk);setVm(v=>({...v,[bk.id]:(v[bk.id]||0)+1}));}}>
+                      <span style={{fontSize:i===0?14:11,width:18,textAlign:"center",flexShrink:0}}>{["🥇","🥈","🥉"][i]||i+1}</span>
+                      <Cover book={bk} w={26} h={36}/>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:11,fontWeight:700,color:tc,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginBottom:2}}>{bk.title}</div>
+                        <div style={{display:"flex",gap:1}}>{[1,2,3,4,5].map(s=><span key={s} style={{fontSize:11,color:s<=ratings[bk.id].stars?"#F59E0B":"#D1D5DB"}}>{s<=ratings[bk.id].stars?"★":"☆"}</span>)}</div>
+                      </div>
+                      {ratings[bk.id].comment&&<span style={{fontSize:9,color:sc,maxWidth:60,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>「{ratings[bk.id].comment}」</span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>;
+          })()}
+
+        </div>
+      </main>
+
+      {curDet&&<div style={{position:"fixed",inset:0,background:"rgba(60,18,5,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:20}} onClick={()=>setDet(null)}>
+        <div style={{background:D("#fff","#231508"),borderRadius:13,padding:"17px 18px",width:540,maxWidth:"95vw",maxHeight:"90vh",overflowY:"auto",border:"1px solid "+D("#FDBA74","#3A2010"),position:"relative"}} onClick={e=>e.stopPropagation()}>
+          <button onClick={()=>setDet(null)} style={{position:"absolute",top:9,right:11,background:"none",border:"none",fontSize:16,cursor:"pointer",color:"#9A3412"}}>×</button>
+          <div style={{display:"flex",gap:14}}>
+            <div style={{flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",gap:7}}>
+              <Cover book={curDet} w={95} h={133}/>
+              {isAdm&&(()=>{
+                const detRef=React.createRef();
+                return<>
+                  <button onClick={()=>detRef.current&&detRef.current.click()} style={{padding:"3px 0",borderRadius:9,border:"1px solid #10B981",background:"#F0FDF4",color:"#065F46",cursor:"pointer",fontSize:10,fontWeight:600,width:95}}>🖼 {curDet.cover?"更換封面":"上傳封面"}</button>
+                  <input ref={detRef} type="file" accept="image/*" style={{display:"none"}} onChange={e=>{const file=e.target.files[0];if(!file)return;if(file.size>2*1024*1024){alert("圖片大小請勿超過 2MB");return;}const reader=new FileReader();reader.onload=ev=>{setBooks(p=>p.map(b=>b.id===curDet.id?{...b,cover:ev.target.result}:b));setDet(d=>d?{...d,cover:ev.target.result}:d);toast("✓ 封面已更新");};reader.readAsDataURL(file);e.target.value="";}}/>
+                  {curDet.cover&&<button onClick={()=>{setBooks(p=>p.map(b=>b.id===curDet.id?{...b,cover:""}:b));setDet(d=>d?{...d,cover:""}:d);toast("封面已移除");}} style={{padding:"2px 0",borderRadius:9,border:"1px solid #FECACA",background:"#FEF2F2",color:"#DC2626",cursor:"pointer",fontSize:9,fontWeight:600,width:95}}>✕ 移除封面</button>}
+                </>;
+              })()}
+              <button onClick={()=>{const r=favs.has(curDet.id);setFavs(f=>{const n=new Set(f);r?n.delete(curDet.id):n.add(curDet.id);return n;});toast(r?"已移除":"✓ 已收藏");}} style={{padding:"3px 0",borderRadius:12,border:"1.5px solid "+(favs.has(curDet.id)?"#EF4444":"#FDBA74"),background:favs.has(curDet.id)?"#FEE2E2":"transparent",color:favs.has(curDet.id)?"#DC2626":"#9A3412",cursor:"pointer",fontSize:10,fontWeight:600,width:95}}>{favs.has(curDet.id)?"♥ 已收藏":"♡ 加入收藏"}</button>
+              <div style={{fontSize:10,color:"#9A3412"}}>👁 {vm[curDet.id]||0} 次</div>
+            </div>
+            <div style={{flex:1,minWidth:0}}>
+              <h2 style={{fontFamily:"Playfair Display,serif",fontSize:14,color:"#431407",marginBottom:3,lineHeight:1.3}}>{curDet.title}</h2>
+              <p style={{fontSize:11,color:"#9A3412",marginBottom:7}}>{curDet.author}</p>
+              {[
+                {l:"分類",v:<span style={{background:gc(curDet)+"18",color:gc(curDet),fontSize:10,fontWeight:700,fontFamily:"monospace",padding:"2px 5px",borderRadius:3}}>{gk(curDet)} {curDet.category}</span>},
+                {l:"類型",v:<Tag c={curDet.type==="ebook"?"電子書":"實體書"} s={curDet.type==="physical"?{background:"#FFF7ED",color:"#C2410C"}:{background:"#DBEAFE",color:"#1E40AF"}}/>},
+                ...(curDet.type==="physical"?[{l:"書況",v:<Tag c={curDet.condition} s={cs(curDet.condition)}/>}]:[]),
+                {l:"出版年",v:curDet.publishYear||"—"},{l:"入館日",v:curDet.addedDate},
+              ].map((r,i)=>(
+                <div key={i} style={{display:"flex",alignItems:"center",gap:5,padding:"4px 0",borderBottom:"1px solid #FFF3E0"}}>
+                  <span style={{fontSize:10,color:"#9A3412",fontWeight:600,width:40,flexShrink:0}}>{r.l}</span>
+                  <span style={{fontSize:11,color:"#431407",display:"flex",alignItems:"center",gap:4,flexWrap:"wrap"}}>{r.v}</span>
+                </div>
+              ))}
+              {curDet.desc&&<div style={{marginTop:8,padding:8,background:"#FFF7ED",borderRadius:6,border:"1px solid #FDBA74"}}><p style={{fontSize:10,color:"#B87050",fontWeight:600,marginBottom:2}}>書籍簡介</p><p style={{fontSize:11,color:"#431407",lineHeight:1.6}}>{curDet.desc}</p></div>}
+
+              {curDet.type==="physical"&&(()=>{
+                const bcp=copies[curDet.id]||[];
+                const actCids=borrows.filter(b=>(b.status==="active"||b.status==="overdue")&&b.bookId===curDet.id).map(b=>b.cid);
+                return<div style={{marginTop:9,padding:9,background:"#FFF7ED",borderRadius:7,border:"1px solid #FDBA74"}}>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
+                    <span style={{fontSize:11,color:"#B87050",fontWeight:700}}>📚 複本管理（{bcp.length} 冊）</span>
+                    {isAdm&&<Btn c="＋ 新增一冊" sm v="o" onClick={()=>{const n=bcp.length+1;setCopies(p=>({...p,[curDet.id]:[...(p[curDet.id]||[]),{cid:curDet.id+"_"+n,label:"第"+n+"冊",cond:"良好",status:"available"}]}));toast("✓ 已新增");}}/>}
+                  </div>
+                  {bcp.map(cp=>{const isBw=actCids.includes(cp.cid);return(
+                    <div key={cp.cid} style={{display:"flex",alignItems:"center",gap:5,padding:"4px 6px",background:"#fff",borderRadius:6,border:"1px solid #FFF3E0",marginBottom:3}}>
+                      <span style={{fontSize:10,fontWeight:700,color:"#431407",width:37,flexShrink:0}}>{cp.label}</span>
+                      <Tag c={isBw?"借出中":"可借閱"} s={isBw?{background:"#FEE2E2",color:"#991B1B"}:{background:"#D1FAE5",color:"#065F46"}}/>
+                      {isAdm?<select value={cp.cond} onChange={e=>setCopies(p=>({...p,[curDet.id]:(p[curDet.id]||[]).map(c=>c.cid===cp.cid?{...c,cond:e.target.value}:c)}))} style={{padding:"2px 4px",border:"1px solid #FDBA74",borderRadius:4,fontSize:10,background:"#FFF7ED",color:"#431407",outline:"none",marginLeft:"auto"}}>
+                        {["全新","良好","普通","破損"].map(cn=><option key={cn}>{cn}</option>)}
+                      </select>:<Tag c={cp.cond} s={{...cs(cp.cond),marginLeft:"auto"}}/>}
+                      <span style={{fontSize:8,color:"#C4A060",fontFamily:"monospace"}}>{cp.cid}</span>
+                    </div>
+                  );})}
+                </div>;
+              })()}
+
+              <div style={{display:"flex",gap:6,marginTop:9,flexWrap:"wrap"}}>
+                {curDet.type==="physical"&&avCp(curDet.id).length>0&&<Btn c="↗ 立即借閱" onClick={()=>{setDet(null);setBf({memberId:"",bookId:String(curDet.id),cid:"",days:"14"});setModal("borrow");}}/>}
+                {curDet.type==="physical"&&avCp(curDet.id).length===0&&!rvs.some(r=>r.bookId===curDet.id)&&<Btn c="⏱ 預約等待" v="y" onClick={()=>{setRvs(rs=>[...rs,{id:Date.now(),bookId:curDet.id,date:new Date().toISOString().slice(0,10)}]);toast("✓ 已成功預約");setDet(null);}}/>}
+                {curDet.type==="physical"&&avCp(curDet.id).length===0&&rvs.some(r=>r.bookId===curDet.id)&&<Btn c="✓ 已預約中" disabled s={{background:"#6B7280"}}/>}
+                {curDet.type==="ebook"&&<Btn c="□ 線上閱讀" onClick={()=>setDet(null)}/>}
+              </div>
+
+              {/* ⭐ 評分與短評 */}
+              {(()=>{
+                const r=ratings[curDet.id];
+                const isEditing=ratingEdit&&ratingEdit.bookId===curDet.id;
+                const Stars=({val,onChange})=><div style={{display:"flex",gap:3}}>{[1,2,3,4,5].map(i=><span key={i} onClick={()=>onChange&&onChange(i)} style={{fontSize:20,cursor:onChange?"pointer":"default",color:i<=val?"#F59E0B":"#D1D5DB"}}>{i<=val?"★":"☆"}</span>)}</div>;
+                return<div style={{marginTop:11,padding:"11px 13px",background:D("#FFF7ED","#2B1808"),borderRadius:9,border:"1px solid "+D("#FDBA74","#3A2010")}}>
+                  <div style={{fontSize:11,color:D("#B87050","#D4A060"),fontWeight:700,marginBottom:8}}>⭐ 評分與短評</div>
+                  {r&&!isEditing&&<div style={{marginBottom:8}}><Stars val={r.stars}/>{r.comment&&<div style={{fontSize:11,color:D("#431407","#F0D5A5"),marginTop:5,fontStyle:"italic",lineHeight:1.5}}>「{r.comment}」</div>}</div>}
+                  {!isEditing
+                    ?<button onClick={()=>setRatingEdit({bookId:curDet.id,stars:r?r.stars:0,comment:r?r.comment:""})} style={{padding:"5px 12px",borderRadius:6,border:"1px solid "+D("#FDBA74","#3A2010"),background:"transparent",color:D("#9A3412","#B09060"),cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>{r?"✏ 修改評分":"☆ 為此書評分"}</button>
+                    :<div>
+                      <Stars val={ratingEdit.stars} onChange={s=>setRatingEdit(p=>({...p,stars:s}))}/>
+                      <textarea value={ratingEdit.comment||""} onChange={e=>setRatingEdit(p=>({...p,comment:e.target.value}))} placeholder="留下一句話心得…（選填）" rows={2} style={{marginTop:7,resize:"none",fontSize:11}}/>
+                      <div style={{display:"flex",gap:6,marginTop:7}}>
+                        <Btn c={r?"更新評分":"✓ 儲存評分"} sm onClick={()=>{if(!ratingEdit.stars){toast("請先選擇星數");return;}setRatings(p=>({...p,[curDet.id]:{stars:ratingEdit.stars,comment:(ratingEdit.comment||"").trim()}}));setRatingEdit(null);toast("✓ 評分已儲存");}}/>
+                        {r&&<Btn c="移除" sm v="r" onClick={()=>{setRatings(p=>{const n={...p};delete n[curDet.id];return n;});setRatingEdit(null);toast("評分已移除");}}/>}
+                        <Btn c="取消" sm v="o" onClick={()=>setRatingEdit(null)}/>
+                      </div>
+                    </div>
+                  }
+                </div>;
+              })()}
+
+              {/* 📚 相關書目 */}
+              {(()=>{
+                const related=books.filter(b=>b.category===curDet.category&&b.id!==curDet.id).slice(0,4);
+                if(!related.length)return null;
+                return<div style={{marginTop:11}}>
+                  <div style={{fontSize:11,color:D("#B87050","#D4A060"),fontWeight:700,marginBottom:8}}>📚 同分類書目</div>
+                  <div style={{display:"flex",gap:9,overflowX:"auto",paddingBottom:4}}>
+                    {related.map(bk=>(
+                      <div key={bk.id} onClick={()=>{setDet(bk);setVm(v=>({...v,[bk.id]:(v[bk.id]||0)+1}));}} style={{flexShrink:0,width:80,cursor:"pointer",textAlign:"center"}}>
+                        <Cover book={bk} w={52} h={72}/>
+                        <div style={{fontSize:9.5,color:D("#431407","#F0D5A5"),marginTop:4,lineHeight:1.3,overflow:"hidden",textOverflow:"ellipsis",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{bk.title}</div>
+                        {ratings[bk.id]&&<div style={{fontSize:10,color:"#F59E0B",marginTop:2}}>{"★".repeat(ratings[bk.id].stars)}</div>}
+                      </div>
+                    ))}
+                  </div>
+                </div>;
+              })()}
+            </div>
+          </div>
+        </div>
+      </div>}
+
+      {showL&&<div style={{position:"fixed",inset:0,background:"rgba(8,3,0,0.72)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:300,padding:20}} onClick={()=>{setShowL(false);setPendN(null);}}>
+        <div style={{background:D("#fff","#231508"),borderRadius:17,padding:"24px 20px",width:330,maxWidth:"90vw",border:"1px solid "+D("#FDDFA8","#3A2010"),boxShadow:"0 14px 36px rgba(70,25,5,0.25)",position:"relative"}} onClick={e=>e.stopPropagation()}>
+          <button onClick={()=>{setShowL(false);setPendN(null);}} style={{position:"absolute",top:9,right:11,background:"none",border:"none",fontSize:15,cursor:"pointer",color:D("#9A3412","#B09060")}}>×</button>
+          <div style={{textAlign:"center",marginBottom:14}}>
+            <div style={{width:42,height:42,borderRadius:"50%",background:"linear-gradient(135deg,#FCEABB,#F8A020)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:19,margin:"0 auto 7px"}}>🔐</div>
+            <div style={{fontFamily:"Playfair Display,serif",fontSize:15,color:D("#431407","#F0D5A5"),fontWeight:700}}>管理員登入</div>
+            <div style={{fontSize:11,color:D("#9A3412","#B09060"),marginTop:2}}>請輸入管理員帳號與密碼</div>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:7,marginBottom:8}}>
+            <div><label style={{display:"block",fontSize:11,fontWeight:700,color:D("#9A3412","#B09060"),marginBottom:2}}>帳號</label><input value={la} onChange={e=>setLa(e.target.value)} onKeyDown={e=>e.key==="Enter"&&doLogin()} placeholder="請輸入帳號" style={{padding:"7px 8px",border:"1.5px solid "+D("#FDDFA8","#3A2010"),borderRadius:6,fontSize:13,background:D("#FFFBF0","#2B1808"),color:D("#431407","#F0D5A5"),outline:"none"}}/></div>
+            <div><label style={{display:"block",fontSize:11,fontWeight:700,color:D("#9A3412","#B09060"),marginBottom:2}}>密碼</label><input type="password" value={lp} onChange={e=>setLp(e.target.value)} onKeyDown={e=>e.key==="Enter"&&doLogin()} placeholder="請輸入密碼" style={{padding:"7px 8px",border:"1.5px solid "+D("#FDDFA8","#3A2010"),borderRadius:6,fontSize:13,background:D("#FFFBF0","#2B1808"),color:D("#431407","#F0D5A5"),outline:"none"}}/></div>
+          </div>
+          {le&&<div style={{background:"#FEE2E2",borderRadius:6,padding:"5px 8px",fontSize:11,color:"#991B1B",marginBottom:8,textAlign:"center",border:"1px solid #FECACA"}}>⚠ {le}</div>}
+          <div style={{display:"flex",gap:6}}>
+            <button onClick={doLogin} style={{flex:1,padding:"8px",borderRadius:8,border:"none",cursor:"pointer",fontWeight:700,fontSize:13,background:"linear-gradient(135deg,#F5C84A,#E8960A)",color:"#3D1F00"}}>確認登入</button>
+            <button onClick={()=>{setShowL(false);setPendN(null);}} style={{padding:"8px 11px",borderRadius:8,border:"1.5px solid #FDDFA8",background:"transparent",color:"#9A3412",cursor:"pointer",fontWeight:600,fontSize:12}}>取消</button>
+          </div>
+        </div>
+      </div>}
+
+      {modal==="borrow"&&<div style={{position:"fixed",inset:0,background:"rgba(60,18,5,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:20}} onClick={()=>setModal(null)}>
+        <div style={{background:D("#fff","#231508"),borderRadius:13,padding:18,width:410,maxWidth:"95vw",border:"1px solid "+D("#FDBA74","#3A2010")}} onClick={e=>e.stopPropagation()}>
+          <div style={{fontFamily:"Playfair Display,serif",fontSize:14,color:D("#431407","#F0D5A5"),marginBottom:9}}>新增借閱登記</div>
+          <div className="fg"><label>選擇書目</label>
+            <select value={bf.bookId} onChange={e=>setBf(p=>({...p,bookId:e.target.value,cid:""}))}>
+              <option value="">— 請選擇書目 —</option>
+              {avBks.map(b=>{const cc=cpCnt(b.id);return<option key={b.id} value={b.id}>[{KOD[b.category]}] {b.title}{cc.total>1?" ("+cc.avail+"/"+cc.total+"冊)":""}</option>;})}
+            </select>
+          </div>
+          {bf.bookId&&avCp(parseInt(bf.bookId)).length>1&&<div className="fg"><label>選擇冊別</label>
+            <select value={bf.cid} onChange={e=>setBf(p=>({...p,cid:e.target.value}))}>
+              <option value="">— 自動選第一可用冊 —</option>
+              {avCp(parseInt(bf.bookId)).map(c=><option key={c.cid} value={c.cid}>{c.label}（{c.cond}）</option>)}
+            </select>
+          </div>}
+          <div className="fg"><label>選擇會員</label>
+            <select value={bf.memberId} onChange={e=>setBf(p=>({...p,memberId:e.target.value}))}>
+              <option value="">— 請選擇會員 —</option>
+              {members.map(m=>{const cnt=borrows.filter(b=>b.memberId===m.id&&(b.status==="active"||b.status==="overdue")).length;return<option key={m.id} value={m.id}>{m.name}（{m.phone}）{cnt>=borrowLimit?" ⚠ 已達上限":cnt>0?" — 借閱中 "+cnt+"/"+borrowLimit:""}</option>;})}
+            </select>
+          </div>
+          {bf.memberId&&(()=>{const cnt=borrows.filter(b=>b.memberId===parseInt(bf.memberId)&&(b.status==="active"||b.status==="overdue")).length;return cnt>=borrowLimit?<div style={{background:D("#FEF2F2","#3A1010"),border:"1px solid #FECACA",borderRadius:7,padding:"7px 10px",fontSize:11,color:"#DC2626",marginBottom:8}}>⚠ 此會員已借 {cnt} 本，達到上限（{borrowLimit} 本），無法新增借閱</div>:cnt>=borrowLimit-1?<div style={{background:D("#FEF3C7","#3A2A00"),border:"1px solid #FCD34D",borderRadius:7,padding:"7px 10px",fontSize:11,color:D("#92400E","#F0C060"),marginBottom:8}}>⚠ 此會員已借 {cnt}/{borrowLimit} 本，再借一本即達上限</div>:null;})()}
+          <div className="fg"><label>借閱天數</label>
+            <select value={bf.days} onChange={e=>setBf(p=>({...p,days:e.target.value}))}>
+              {["7","14","30","60"].map(d=><option key={d}>{d} 天</option>)}
+            </select>
+          </div>
+          <div style={{display:"flex",gap:7,marginTop:10}}><Btn c="確認借閱" onClick={doBorrow}/><Btn c="取消" v="o" onClick={()=>setModal(null)}/></div>
+        </div>
+      </div>}
+
+      {modal==="member"&&<div style={{position:"fixed",inset:0,background:"rgba(60,18,5,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:20}} onClick={()=>setModal(null)}>
+        <div style={{background:D("#fff","#231508"),borderRadius:13,padding:18,width:400,maxWidth:"95vw",border:"1px solid "+D("#FDBA74","#3A2010")}} onClick={e=>e.stopPropagation()}>
+          <div style={{fontFamily:"Playfair Display,serif",fontSize:14,color:D("#431407","#F0D5A5"),marginBottom:9}}>新增會員</div>
+          <div className="fg"><label>姓名 *</label><input placeholder="請輸入姓名" value={nm.name} onChange={e=>setNm(p=>({...p,name:e.target.value}))}/></div>
+          <div className="fg"><label>Email</label><input type="email" placeholder="email@fire.gov.tw" value={nm.email} onChange={e=>setNm(p=>({...p,email:e.target.value}))}/></div>
+          <div className="fg"><label>電話</label><input placeholder="0912-345-678" value={nm.phone} onChange={e=>setNm(p=>({...p,phone:e.target.value}))}/></div>
+          <div style={{display:"flex",gap:7,marginTop:10}}><Btn c="確認新增" onClick={doAddMem}/><Btn c="取消" v="o" onClick={()=>setModal(null)}/></div>
+        </div>
+      </div>}
+
+      {/* 書目編輯 Modal */}
+      {editBook&&<div style={{position:"fixed",inset:0,background:"rgba(60,18,5,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250,padding:20}} onClick={()=>setEditBook(null)}>
+        <div style={{background:D("#fff","#231508"),borderRadius:14,padding:"20px 22px",width:580,maxWidth:"95vw",maxHeight:"90vh",overflowY:"auto",border:"1px solid "+D("#FDBA74","#3A2010"),position:"relative"}} onClick={e=>e.stopPropagation()}>
+          <button onClick={()=>setEditBook(null)} style={{position:"absolute",top:10,right:13,background:"none",border:"none",fontSize:16,cursor:"pointer",color:"#9A3412"}}>×</button>
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16,paddingBottom:12,borderBottom:"2px solid #FED7AA"}}>
+            <Cover book={editBook} w={36} h={50}/>
+            <div>
+              <div style={{fontFamily:"Playfair Display,serif",fontSize:15,color:"#431407",fontWeight:700}}>編輯書目資料</div>
+              <div style={{fontSize:10,color:"#9A3412",marginTop:2}}>ID: {editBook.id} · 修改後點擊儲存</div>
+            </div>
+          </div>
+          <div style={{display:"flex",gap:14,marginBottom:14,paddingBottom:12,borderBottom:"1px solid #FFF3E0"}}>
+            <CoverUpload value={editBook.cover||""} onChange={v=>setEditBook(p=>({...p,cover:v}))}/>
+            <div style={{flex:1,display:"grid",gridTemplateColumns:"1fr 1fr",gap:9}}>
+              <div className="fg"><label>書名 *</label><input value={editBook.title} onChange={e=>setEditBook(p=>({...p,title:e.target.value}))}/></div>
+              <div className="fg"><label>作者</label><input value={editBook.author} onChange={e=>setEditBook(p=>({...p,author:e.target.value}))}/></div>
+              <div className="fg"><label>分類</label>
+                <select value={editBook.category} onChange={e=>setEditBook(p=>({...p,category:e.target.value}))}>
+                  {CATS.map(c=><option key={c} value={c}>[{KOD[c]}] {c}</option>)}
+                </select>
+              </div>
+              <div className="fg"><label>出版年</label><input value={editBook.publishYear||""} onChange={e=>setEditBook(p=>({...p,publishYear:e.target.value}))}/></div>
+              <div className="fg"><label>ISBN</label><input value={editBook.isbn||""} onChange={e=>setEditBook(p=>({...p,isbn:e.target.value}))}/></div>
+              {editBook.type==="physical"
+                ?<div className="fg"><label>書況</label>
+                  <select value={editBook.condition} onChange={e=>setEditBook(p=>({...p,condition:e.target.value}))}>
+                    {["全新","良好","普通","破損"].map(c=><option key={c}>{c}</option>)}
+                  </select>
+                </div>
+                :<div className="fg"><label>電子書連結</label><input value={editBook.ebookUrl||""} onChange={e=>setEditBook(p=>({...p,ebookUrl:e.target.value}))}/></div>
+              }
+            </div>
+          </div>
+          <div className="fg"><label>書籍簡介</label><textarea rows={3} value={editBook.desc||""} onChange={e=>setEditBook(p=>({...p,desc:e.target.value}))} style={{resize:"vertical"}}/></div>
+          <div style={{background:"#FFF7ED",borderRadius:8,padding:10,marginBottom:12,border:"1px solid #FDBA74",fontSize:11,color:"#9A3412"}}>
+            <b>注意：</b>書目類型（實體書/電子書）與入館日期不可修改。目前狀態：
+            <Tag c={editBook.status==="available"?"可借閱":"借出中"} s={{...editBook.status==="available"?{background:"#D1FAE5",color:"#065F46"}:{background:"#FEE2E2",color:"#991B1B"},marginLeft:6}}/>
+          </div>
+          <div style={{display:"flex",gap:8}}><Btn c="✓ 儲存變更" onClick={doSaveEdit}/><Btn c="取消" v="o" onClick={()=>setEditBook(null)}/></div>
+        </div>
+      </div>}
+
+      {/* QR Code Modal */}
+      {qrBook&&<QRModal book={qrBook} onClose={()=>setQrBook(null)}/>}
+
+      <div className="tw">{toasts.map(t=><div key={t.id} className="tst">{t.msg}</div>)}</div>
+    </div>
+  </>);
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+</script>
+</body>
+</html>
