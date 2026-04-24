@@ -235,6 +235,63 @@ function QRModal({book, onClose}){
   );
 }
 
+// PDF 閱覽器 Modal（全螢幕）
+function PDFViewerModal({book, onClose}){
+  const src=book.pdfData||book.ebookUrl||"";
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.93)",display:"flex",flexDirection:"column",zIndex:500}}>
+      {/* 頂部工具列 */}
+      <div style={{background:"#2A1508",padding:"10px 16px",display:"flex",alignItems:"center",gap:12,flexShrink:0,borderBottom:"1px solid #3A2010",boxShadow:"0 2px 8px rgba(0,0,0,0.4)"}}>
+        <Cover book={book} w={30} h={42}/>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontSize:13,fontWeight:700,color:"#F0D5A5",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontFamily:"Playfair Display,serif"}}>{book.title}</div>
+          <div style={{fontSize:10,color:"#B09060"}}>{book.author}　·　電子書　·　<span style={{fontFamily:"monospace",fontSize:9}}>{book.isbn||"—"}</span></div>
+        </div>
+        {book.ebookUrl&&!book.pdfData&&<a href={book.ebookUrl} target="_blank" rel="noreferrer" style={{padding:"5px 13px",borderRadius:6,background:"#4A6FBF",color:"#fff",fontSize:11,fontWeight:600,textDecoration:"none",flexShrink:0,whiteSpace:"nowrap"}}>⬇ 下載</a>}
+        <button onClick={onClose} style={{background:"rgba(240,213,165,0.12)",border:"1px solid rgba(240,213,165,0.28)",color:"#F0D5A5",borderRadius:6,padding:"6px 16px",cursor:"pointer",fontSize:12,fontWeight:700,flexShrink:0,fontFamily:"inherit"}}>✕ 關閉</button>
+      </div>
+      {/* PDF 內容區 */}
+      {src
+        ?<iframe src={src} style={{flex:1,border:"none",background:"#525659",width:"100%"}} title={book.title} allowFullScreen/>
+        :<div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16,background:"#18100A"}}>
+          <div style={{fontSize:64,opacity:0.35}}>📄</div>
+          <div style={{fontSize:17,color:"#F0D5A5",fontFamily:"Playfair Display,serif",fontWeight:700}}>尚未設定 PDF 來源</div>
+          <div style={{fontSize:12,color:"#B09060",textAlign:"center",maxWidth:320,lineHeight:1.8}}>請由管理員前往「書目管理」→「編輯」<br/>上傳 PDF 檔案，或填入線上 PDF 網址</div>
+          <button onClick={onClose} style={{marginTop:6,padding:"8px 24px",borderRadius:8,border:"1px solid rgba(240,213,165,0.3)",background:"rgba(240,213,165,0.08)",color:"#F0D5A5",cursor:"pointer",fontSize:13,fontFamily:"inherit",fontWeight:600}}>關閉</button>
+        </div>
+      }
+    </div>
+  );
+}
+
+// PDF 上傳元件（供新增／編輯電子書表單使用）
+function PDFUpload({pdfData, ebookUrl, onPdfChange, onUrlChange}){
+  const ref=useRef();
+  const handleFile=e=>{
+    const file=e.target.files[0];
+    if(!file)return;
+    if(file.size>30*1024*1024){alert("PDF 大小請勿超過 30MB");return;}
+    const reader=new FileReader();
+    reader.onload=ev=>onPdfChange(ev.target.result);
+    reader.readAsDataURL(file);
+    e.target.value="";
+  };
+  return(
+    <div style={{display:"flex",flexDirection:"column",gap:5,gridColumn:"1/-1"}}>
+      <label style={{fontSize:11,fontWeight:600,color:"#9A3412"}}>PDF 來源</label>
+      <div style={{display:"flex",gap:7,alignItems:"center",flexWrap:"wrap"}}>
+        <button type="button" onClick={()=>ref.current.click()} style={{padding:"6px 13px",borderRadius:6,border:"1.5px dashed "+(pdfData?"#10B981":"#FDBA74"),background:pdfData?"#F0FDF4":"#FFF7ED",color:pdfData?"#065F46":"#9A3412",cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit",whiteSpace:"nowrap",flexShrink:0}}>
+          {pdfData?"✓ PDF 已上傳（點擊更換）":"↑ 上傳 PDF 檔"}
+        </button>
+        {pdfData&&<button type="button" onClick={()=>onPdfChange("")} style={{padding:"4px 9px",borderRadius:6,border:"1px solid #FECACA",background:"#FEF2F2",color:"#DC2626",cursor:"pointer",fontSize:10,fontFamily:"inherit",flexShrink:0}}>✕ 移除</button>}
+        <input value={ebookUrl||""} onChange={e=>onUrlChange(e.target.value)} placeholder="或填入線上 PDF / 網址 https://…" style={{flex:1,minWidth:130}}/>
+      </div>
+      <div style={{fontSize:9.5,color:"#B87050",lineHeight:1.6}}>上傳 PDF 存於瀏覽器記憶體（上限 30MB），重整後需重新上傳・或填入線上 PDF 網址持久保存</div>
+      <input ref={ref} type="file" accept=".pdf,application/pdf" onChange={handleFile} style={{display:"none"}}/>
+    </div>
+  );
+}
+
 function App(){
   const[view,setView]=useState("overview");
   const[isAdm,setIsAdm]=useState(false);
@@ -251,7 +308,7 @@ function App(){
   const[btab,setBtab]=useState("active");
   const[det,setDet]=useState(null);
   const[atype,setAtype]=useState("physical");
-  const[nb,setNb]=useState({title:"",author:"",category:CATS[0],isbn:"",condition:"良好",desc:"",publishYear:"",cover:""});
+  const[nb,setNb]=useState({title:"",author:"",category:CATS[0],isbn:"",condition:"良好",desc:"",publishYear:"",cover:"",pdfData:"",ebookUrl:""});
   const[nm,setNm]=useState({name:"",email:"",phone:""});
   const[bf,setBf]=useState({memberId:"",bookId:"",cid:"",days:"14"});
   const[la,setLa]=useState("");
@@ -271,6 +328,7 @@ function App(){
   const[impErr,setImpErr]=useState("");
   const[editBook,setEditBook]=useState(null);
   const[qrBook,setQrBook]=useState(null);
+  const[pdfViewer,setPdfViewer]=useState(null);
   const[qrFilter,setQrFilter]=useState("all");
   const[isDark,setIsDark]=useState(false);
   const[borrowLimit,setBorrowLimit]=useState(3);
@@ -313,7 +371,7 @@ function App(){
     const bk={...nb,id:Date.now(),type:atype,status:"available",addedDate:new Date().toISOString().slice(0,10),condition:atype==="ebook"?"—":nb.condition,views:0,cover:""};
     setBooks(p=>[...p,bk]);setVm(v=>({...v,[bk.id]:0}));
     if(atype==="physical")setCopies(p=>({...p,[bk.id]:[{cid:bk.id+"_1",label:"第1冊",cond:bk.condition,status:"available"}]}));
-    setNb({title:"",author:"",category:CATS[0],isbn:"",condition:"良好",desc:"",publishYear:"",cover:""});toast("✓ 書目新增成功");
+    setNb({title:"",author:"",category:CATS[0],isbn:"",condition:"良好",desc:"",publishYear:"",cover:"",pdfData:"",ebookUrl:""});toast("✓ 書目新增成功");
   };
   const doSaveEdit=()=>{
     if(!editBook||!editBook.title){toast("書名不能為空");return;}
@@ -434,7 +492,7 @@ function App(){
               <div key={bk.id} style={{background:"#fff",borderRadius:9,padding:11,border:"1px solid #FDBA74",cursor:"pointer"}} onClick={()=>{setDet(bk);setVm(v=>({...v,[bk.id]:(v[bk.id]||0)+1}));}}>
                 <div style={{display:"flex",gap:7,marginBottom:6}}><Cover book={bk} w={34} h={47}/><div style={{flex:1,minWidth:0}}><span style={{background:color+"18",color,padding:"1px 4px",borderRadius:3,fontSize:8.5,fontWeight:700,fontFamily:"monospace",display:"inline-block",marginBottom:3}}>{code}</span><div style={{fontSize:11,color:"#431407",fontFamily:"Playfair Display,serif",lineHeight:1.3}}>{bk.title}</div><div style={{fontSize:9.5,color:"#9A3412"}}>{bk.author}</div></div></div>
                 <div style={{fontSize:10,color:"#7C2D12",lineHeight:1.4,marginBottom:4}}>{(bk.desc||"").slice(0,42)}…</div>
-                <div style={{display:"flex",justifyContent:"space-between"}}><span style={{fontSize:10,color:"#9A3412"}}>👁 {vm[bk.id]||0}</span><span style={{fontSize:10,color:"#B87050",fontWeight:600}}>閱讀 →</span></div>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:10,color:"#9A3412"}}>👁 {vm[bk.id]||0}</span><button onClick={e=>{e.stopPropagation();setPdfViewer(bk);setVm(v=>({...v,[bk.id]:(v[bk.id]||0)+1}));}} style={{padding:"3px 10px",borderRadius:5,border:"none",background:"#B87050",color:"#fff",cursor:"pointer",fontSize:10,fontWeight:700,fontFamily:"inherit"}}>□ 閱讀</button></div>
               </div>
             );})}
           </div>}
@@ -527,7 +585,8 @@ function App(){
                   <div className="fg"><label>分類</label><select value={nb.category} onChange={e=>setNb(p=>({...p,category:e.target.value}))}>{CATS.map(c=><option key={c} value={c}>[{KOD[c]}] {c}</option>)}</select></div>
                   <div className="fg"><label>出版年</label><input placeholder="2024" value={nb.publishYear} onChange={e=>setNb(p=>({...p,publishYear:e.target.value}))}/></div>
                   <div className="fg"><label>ISBN</label><input placeholder="978-XXX" value={nb.isbn} onChange={e=>setNb(p=>({...p,isbn:e.target.value}))}/></div>
-                  {atype==="physical"?<div className="fg"><label>書況</label><select value={nb.condition} onChange={e=>setNb(p=>({...p,condition:e.target.value}))}>{["全新","良好","普通","破損"].map(c=><option key={c}>{c}</option>)}</select></div>:<div className="fg"><label>連結</label><input placeholder="https://…" value={nb.ebookUrl||""} onChange={e=>setNb(p=>({...p,ebookUrl:e.target.value}))}/></div>}
+                  {atype==="physical"&&<div className="fg"><label>書況</label><select value={nb.condition} onChange={e=>setNb(p=>({...p,condition:e.target.value}))}>{["全新","良好","普通","破損"].map(c=><option key={c}>{c}</option>)}</select></div>}
+                  {atype==="ebook"&&<PDFUpload pdfData={nb.pdfData||""} ebookUrl={nb.ebookUrl||""} onPdfChange={v=>setNb(p=>({...p,pdfData:v}))} onUrlChange={v=>setNb(p=>({...p,ebookUrl:v}))}/>}
                 </div>
               </div>
               <div className="fg"><label>簡介</label><textarea rows={2} placeholder="請輸入描述…" value={nb.desc} onChange={e=>setNb(p=>({...p,desc:e.target.value}))} style={{resize:"vertical"}}/></div>
@@ -536,7 +595,7 @@ function App(){
                 <div><div style={{fontSize:11,fontWeight:600,color:"#431407"}}>{nb.title}</div><div style={{fontSize:9,color:"#9A3412"}}>{nb.author}</div></div>
                 {nb.cover&&<span style={{fontSize:9,background:"#D1FAE5",color:"#065F46",padding:"2px 7px",borderRadius:9,marginLeft:"auto"}}>✓ 已上傳封面</span>}
               </div>}
-              <div style={{display:"flex",gap:7}}><Btn c="✓ 確認新增" onClick={doAddBk}/><Btn c="清除" v="o" onClick={()=>setNb({title:"",author:"",category:CATS[0],isbn:"",condition:"良好",desc:"",publishYear:"",cover:""})}/></div>
+              <div style={{display:"flex",gap:7}}><Btn c="✓ 確認新增" onClick={doAddBk}/><Btn c="清除" v="o" onClick={()=>setNb({title:"",author:"",category:CATS[0],isbn:"",condition:"良好",desc:"",publishYear:"",cover:"",pdfData:"",ebookUrl:""})}/></div>
             </div>
           </>}
 
@@ -1173,7 +1232,7 @@ function App(){
                 {curDet.type==="physical"&&avCp(curDet.id).length>0&&<Btn c="↗ 立即借閱" onClick={()=>{setDet(null);setBf({memberId:"",bookId:String(curDet.id),cid:"",days:"14"});setModal("borrow");}}/>}
                 {curDet.type==="physical"&&avCp(curDet.id).length===0&&!rvs.some(r=>r.bookId===curDet.id)&&<Btn c="⏱ 預約等待" v="y" onClick={()=>{setRvs(rs=>[...rs,{id:Date.now(),bookId:curDet.id,date:new Date().toISOString().slice(0,10)}]);toast("✓ 已成功預約");setDet(null);}}/>}
                 {curDet.type==="physical"&&avCp(curDet.id).length===0&&rvs.some(r=>r.bookId===curDet.id)&&<Btn c="✓ 已預約中" disabled s={{background:"#6B7280"}}/>}
-                {curDet.type==="ebook"&&<Btn c="□ 線上閱讀" onClick={()=>setDet(null)}/>}
+                {curDet.type==="ebook"&&<Btn c="□ 線上閱讀" onClick={()=>{setPdfViewer(curDet);setDet(null);}}/>}
               </div>
 
               {/* ⭐ 評分與短評 */}
@@ -1311,7 +1370,7 @@ function App(){
                     {["全新","良好","普通","破損"].map(c=><option key={c}>{c}</option>)}
                   </select>
                 </div>
-                :<div className="fg"><label>電子書連結</label><input value={editBook.ebookUrl||""} onChange={e=>setEditBook(p=>({...p,ebookUrl:e.target.value}))}/></div>
+                :<PDFUpload pdfData={editBook.pdfData||""} ebookUrl={editBook.ebookUrl||""} onPdfChange={v=>setEditBook(p=>({...p,pdfData:v}))} onUrlChange={v=>setEditBook(p=>({...p,ebookUrl:v}))}/>
               }
             </div>
           </div>
@@ -1326,6 +1385,8 @@ function App(){
 
       {/* QR Code Modal */}
       {qrBook&&<QRModal book={qrBook} onClose={()=>setQrBook(null)}/>}
+
+      {pdfViewer&&<PDFViewerModal book={pdfViewer} onClose={()=>setPdfViewer(null)}/>}
 
       <div className="tw">{toasts.map(t=><div key={t.id} className="tst">{t.msg}</div>)}</div>
     </div>
