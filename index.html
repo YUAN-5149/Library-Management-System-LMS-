@@ -76,6 +76,13 @@ input:focus,select:focus{border-color:#B87050;background:#fff}
 .app.dk .ni.on{background:rgba(255,255,255,0.14);color:#F0D5A5;border-left-color:#D4A060}
 .app.dk .sbf{color:rgba(240,213,165,0.65);border-top-color:rgba(255,255,255,0.12)}
 .app.dk .tst{background:#3D2810}
+.fab{position:fixed;bottom:24px;right:24px;z-index:400;width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#DC2626,#9B1C1C);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:23px;box-shadow:0 4px 18px rgba(185,28,28,0.50);transition:transform 0.14s,box-shadow 0.14s;animation:fabpop 0.3s ease}
+.fab:hover{transform:scale(1.12);box-shadow:0 7px 26px rgba(185,28,28,0.62)}
+@keyframes fabpop{from{opacity:0;transform:scale(0.7)}to{opacity:1;transform:scale(1)}}
+.bm-ov{position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:700;display:flex;align-items:center;justify-content:center;padding:16px;animation:fdin 0.18s ease}
+@keyframes fdin{from{opacity:0}to{opacity:1}}
+.bm-box{background:#fff;border-radius:16px;overflow:hidden;width:400px;max-width:95vw;height:88vh;max-height:720px;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,0.45)}
+.bm-hdr{background:linear-gradient(135deg,#DC2626,#9B1C1C);padding:11px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -182,8 +189,8 @@ function CoverUpload({value, onChange}){
 // QR Code Modal
 function QRModal({book, onClose}){
   const color=gc(book);
-  const qrId="qrbox_"+book.id+"_"+Date.now();
-  const qrText="溫書閣 ID:"+book.id+" "+book.title+" ISBN:"+(book.isbn||"N/A");
+  const qrId=useRef("qrbox_"+book.id+"_"+Date.now()).current;
+  const qrText="WB:"+book.id+"|"+(book.isbn||book.id);
 
   useEffect(()=>{
     let attempts=0;
@@ -195,7 +202,7 @@ function QRModal({book, onClose}){
         return;
       }
       el.innerHTML="";
-      new QRCode(el,{text:qrText,width:180,height:180,colorDark:"#431407",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});
+      new QRCode(el,{text:qrText,width:180,height:180,colorDark:"#431407",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.L});
     };
     const t=setTimeout(tryInit,80);
     return()=>clearTimeout(t);
@@ -331,6 +338,7 @@ function App(){
   const[pdfViewer,setPdfViewer]=useState(null);
   const[qrFilter,setQrFilter]=useState("all");
   const[isDark,setIsDark]=useState(false);
+  const[showBorrow,setShowBorrow]=useState(false);
   const[borrowLimit,setBorrowLimit]=useState(3);
   const[reportM,setReportM]=useState(()=>{const d=new Date();return d.toISOString().slice(0,7);});
   const D=(l,r)=>isDark?r:l;
@@ -1387,6 +1395,31 @@ function App(){
       {qrBook&&<QRModal book={qrBook} onClose={()=>setQrBook(null)}/>}
 
       {pdfViewer&&<PDFViewerModal book={pdfViewer} onClose={()=>setPdfViewer(null)}/>}
+
+      {!isAP&&(
+        <button className="fab" onClick={()=>setShowBorrow(true)} title="掃碼借閱">
+          📷
+        </button>
+      )}
+
+      {showBorrow&&(
+        <div className="bm-ov" onClick={()=>setShowBorrow(false)}>
+          <div className="bm-box" onClick={e=>e.stopPropagation()}>
+            <div className="bm-hdr">
+              <div style={{color:"#fff",fontWeight:700,fontSize:13,fontFamily:"'Playfair Display',serif",display:"flex",alignItems:"center",gap:7}}>
+                <span style={{fontSize:16}}>📷</span> 掃碼借閱系統
+              </div>
+              <button onClick={()=>setShowBorrow(false)} style={{background:"rgba(255,255,255,0.2)",border:"none",color:"#fff",width:28,height:28,borderRadius:"50%",cursor:"pointer",fontSize:16,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1}}>×</button>
+            </div>
+            <iframe
+              src="./borrow/"
+              style={{flex:1,border:"none",width:"100%"}}
+              title="掃碼借閱系統"
+              allow="camera; microphone"
+            />
+          </div>
+        </div>
+      )}
 
       <div className="tw">{toasts.map(t=><div key={t.id} className="tst">{t.msg}</div>)}</div>
     </div>
