@@ -83,6 +83,39 @@ input:focus,select:focus{border-color:#B87050;background:#fff}
 @keyframes fdin{from{opacity:0}to{opacity:1}}
 .bm-box{background:#fff;border-radius:16px;overflow:hidden;width:400px;max-width:95vw;height:88vh;max-height:720px;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,0.45)}
 .bm-hdr{background:linear-gradient(135deg,#DC2626,#9B1C1C);padding:11px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+/* ── RWD ──────────────────────────────────────────────────────────────── */
+.hbg{display:none;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;border:none;cursor:pointer;background:rgba(200,140,20,0.15);color:#431407;font-size:20px;flex-shrink:0;margin-right:8px}
+.sb-mask{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.52);z-index:299}
+@media(max-width:1024px){
+  .sg{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:768px){
+  .hbg{display:flex}
+  .sb{position:fixed;left:0;top:0;height:100%;z-index:300;transform:translateX(-100%);transition:transform 0.26s cubic-bezier(.4,0,.2,1);width:240px;border-radius:0 16px 16px 0}
+  .sb.open{transform:translateX(0)}
+  .sb-mask.open{display:block}
+  .main{width:100%}
+  .body{padding:10px 10px}
+  .sg{grid-template-columns:repeat(2,1fr);gap:8px}
+  .two{grid-template-columns:1fr}
+  .hdr{padding:9px 12px}
+  .hdr h2{font-size:15px}
+  .sbar{flex-wrap:wrap}
+  .tc{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{min-width:520px}
+  .om{width:100%;max-width:100vw;border-radius:14px 14px 0 0;margin:0;max-height:92vh}
+  .ov{align-items:flex-end;padding:0}
+  .bm-box{width:100%;max-width:100%;border-radius:16px 16px 0 0;height:90vh;max-height:90vh}
+  .fab{bottom:18px;right:16px;width:48px;height:48px;font-size:20px}
+}
+@media(max-width:480px){
+  .sg{grid-template-columns:repeat(2,1fr);gap:6px}
+  .sc{padding:9px}
+  .sv{font-size:16px}
+  .body{padding:8px}
+  .hdr h2{font-size:14px}
+}
+.app.dk .hbg{color:#F0D5A5;background:rgba(240,213,165,0.12)}
 </style>
 </head>
 <body>
@@ -615,6 +648,7 @@ function App(){
   const[qrFilter,setQrFilter]=useState("all");
   const[isDark,setIsDark]=useState(false);
   const[showBorrow,setShowBorrow]=useState(false);
+  const[sbOpen,setSbOpen]=useState(false);
   const[borrowLimit,setBorrowLimit]=useState(3);
   const[reportM,setReportM]=useState(()=>{const d=new Date();return d.toISOString().slice(0,7);});
   const D=(l,r)=>isDark?r:l;
@@ -697,15 +731,16 @@ function App(){
 
   return(<>
     <div className={"app"+(isDark?" dk":"")}>
-      <aside className="sb">
+      <div className={"sb-mask"+(sbOpen?" open":"")} onClick={()=>setSbOpen(false)}/>
+      <aside className={"sb"+(sbOpen?" open":"")}>
         <div className="sbl"><h1>溫書閣</h1><p>Library System</p></div>
         <nav className="nav">
           <div className="nlbl"><span>一般功能</span></div>
-          {NAV_P.map(n=><div key={n.id} className={"ni"+(view===n.id?" on":"")} onClick={()=>nav(n.id)}><span style={{fontSize:12,width:14,textAlign:"center",fontStyle:"normal",flexShrink:0}}>{n.icon}</span><span>{n.label}</span></div>)}
+          {NAV_P.map(n=><div key={n.id} className={"ni"+(view===n.id?" on":"")} onClick={()=>{nav(n.id);setSbOpen(false);}}><span style={{fontSize:12,width:14,textAlign:"center",fontStyle:"normal",flexShrink:0}}>{n.icon}</span><span>{n.label}</span></div>)}
           <div className="ndiv"/>
           <div className="nlbl"><span>管理員專區</span>{isAdm&&<span style={{fontSize:8,background:"rgba(59,30,0,0.14)",color:"#3B1E00",padding:"1px 5px",borderRadius:6,fontWeight:800}}>已登入</span>}</div>
           {NAV_A.map(n=>(
-            <div key={n.id} className={"ni"+(view===n.id?" on":"")} onClick={()=>nav(n.id)} style={{opacity:isAdm?1:0.62}}>
+            <div key={n.id} className={"ni"+(view===n.id?" on":"")} onClick={()=>{nav(n.id);setSbOpen(false);}} style={{opacity:isAdm?1:0.62}}>
               <span style={{fontSize:12,width:14,textAlign:"center",fontStyle:"normal",flexShrink:0}}>{n.icon}</span><span>{n.label}</span>
               {n.id==="remind"&&dueW.length>0&&isAdm&&<span style={{marginLeft:"auto",fontSize:9,background:"#DC2626",color:"#fff",padding:"1px 5px",borderRadius:6,fontWeight:800}}>{dueW.length}</span>}
               {n.id==="import"&&isAdm&&<span style={{marginLeft:"auto",fontSize:8,background:"#D1FAE5",color:"#065F46",padding:"1px 4px",borderRadius:4,fontWeight:800}}>NEW</span>}
@@ -735,9 +770,12 @@ function App(){
 
       <main className="main">
         <div className="hdr">
-          <div>
-            <h2>{([...NAV_P,...NAV_A].find(n=>n.id===view)||{label:"書目管理"}).label}{isAP&&<span style={{fontSize:10,background:"#FFF7ED",color:"#B87050",border:"1px solid #FDBA74",padding:"2px 6px",borderRadius:11,fontWeight:600}}>🔐</span>}</h2>
-            <p>{today}</p>
+          <div style={{display:"flex",alignItems:"center"}}>
+            <button className="hbg" onClick={()=>setSbOpen(o=>!o)} aria-label="選單">☰</button>
+            <div>
+              <h2>{([...NAV_P,...NAV_A].find(n=>n.id===view)||{label:"書目管理"}).label}{isAP&&<span style={{fontSize:10,background:"#FFF7ED",color:"#B87050",border:"1px solid #FDBA74",padding:"2px 6px",borderRadius:11,fontWeight:600}}>🔐</span>}</h2>
+              <p>{today}</p>
+            </div>
           </div>
           <div style={{display:"flex",gap:6}}>
             {view==="catalog"&&isAdm&&<Btn c="＋ 新增" onClick={()=>nav("add")}/>}
