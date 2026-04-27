@@ -101,16 +101,7 @@ const gc=b=>CLR[b.category]||"#B87050";
 const gk=b=>KOD[b.category]||"?";
 const cs=c=>{const[a,b]=(CND[c]||"#F3F4F6|#6B7280").split("|");return{background:a,color:b};};
 
-const BK=[
-  {id:1,title:"消防安全實務手冊",author:"內政部消防署",category:"消防叢書類",isbn:"9789011001231",type:"physical",status:"available",condition:"良好",addedDate:"2024-01-10",publishYear:"2023",desc:"消防安全基礎知識與規範。",views:128,cover:""},
-  {id:2,title:"消防工程概論",author:"林金宏",category:"消防叢書類",isbn:"9789011002341",type:"physical",status:"borrowed",condition:"良好",addedDate:"2024-01-12",publishYear:"2022",desc:"消防工程設計與施工基礎。",views:87,cover:""},
-  {id:3,title:"急救處置手冊",author:"衛生福利部",category:"緊急救護類",isbn:"9789012001122",type:"physical",status:"available",condition:"普通",addedDate:"2024-01-15",publishYear:"2023",desc:"ACLS緊急急救標準流程。",views:213,cover:""},
-  {id:4,title:"消防員體能訓練指南",author:"體能訓練委員會",category:"運動健身類",isbn:"9789013001234",type:"physical",status:"borrowed",condition:"良好",addedDate:"2024-02-01",publishYear:"2022",desc:"消防員專項體能訓練計畫。",views:94,cover:""},
-  {id:5,title:"NFPA 1 Fire Code 2021",author:"NFPA",category:"NFPA類",isbn:"NFPA-1-2021",type:"physical",status:"available",condition:"全新",addedDate:"2024-03-03",publishYear:"2021",desc:"美國消防法規第1號。",views:167,cover:""},
-  {id:6,title:"消防設備士考試重點整理",author:"張志勇",category:"消防設備類",isbn:"9789025001234",type:"physical",status:"available",condition:"良好",addedDate:"2024-03-20",publishYear:"2023",desc:"消防設備士考試備考用書。",views:344,cover:""},
-  {id:7,title:"消防救災研究報告 2023",author:"消防研究中心",category:"論文報告類",isbn:"EB-TR-001",type:"ebook",status:"available",condition:"—",addedDate:"2024-01-05",publishYear:"2023",desc:"2023年消防救災技術研究彙編。",views:312,cover:""},
-  {id:8,title:"消防月刊合訂本 2023",author:"消防署",category:"中文期刊類",isbn:"EB-CJ-001",type:"ebook",status:"available",condition:"—",addedDate:"2024-02-01",publishYear:"2023",desc:"2023年度消防月刊合訂本。",views:205,cover:""},
-];
+const BK=[];
 const BK_IMPORT=[
   {id:100,title:"台灣的防災戰略",author:"馬士元、阮昭雄",category:"消防叢書類",isbn:"",type:"physical",status:"available",condition:"良好",addedDate:"2026-04-27",publishYear:"2017",desc:"",views:0,cover:""},
   {id:101,title:"避難系統消防安全設備",author:"簡賢文",category:"消防設備類",isbn:"",type:"physical",status:"available",condition:"良好",addedDate:"2026-04-27",publishYear:"2000",desc:"",views:0,cover:""},
