@@ -662,21 +662,21 @@ function App(){
       if(!ev.data)return;
       if(ev.data.type==="BORROW_READY"){
         const ifr=document.querySelector('iframe[title="掃碼借閱系統"]');
-        if(!ifr?.contentWindow)return;
+        if(!ifr||!ifr.contentWindow)return;
         const bmap={};
-        booksRef.current.forEach(b=>{bmap[String(b.id)]={id:String(b.id),title:b.title,category:b.category};});
-        ifr.contentWindow.postMessage({type:"LIBRARY_DATA",books:bmap,members:membersRef.current.map(m=>({id:m.id,name:m.name,account:m.account||"",dept:"消防局",title:"隊員"}))}, "*");
+        booksRef.current.forEach(function(b){bmap[String(b.id)]={id:String(b.id),title:b.title,category:b.category};});
+        ifr.contentWindow.postMessage({type:"LIBRARY_DATA",books:bmap,members:membersRef.current.map(function(m){return{id:m.id,name:m.name,account:m.account||"",dept:"消防局",title:"隊員"};})}, "*");
       }
       if(ev.data.type==="BORROW_CONFIRMED"){
         const br=ev.data.borrow;
-        const mem=membersRef.current.find(m=>(m.account&&m.account===br.ad)||m.name===br.borrower);
-        const bk=booksRef.current.find(b=>String(b.id)===String(br.bookId));
+        const mem=membersRef.current.find(function(m){return(m.account&&m.account===br.ad)||m.name===br.borrower;});
+        const bk=booksRef.current.find(function(b){return String(b.id)===String(br.bookId);});
         if(mem&&bk){
           const today=new Date(),due=new Date(today);
           due.setDate(due.getDate()+14);
           const newBr={id:Date.now(),bookId:bk.id,memberId:mem.id,cid:"",borrowDate:today.toISOString().slice(0,10),dueDate:due.toISOString().slice(0,10),returnDate:null,status:"active",source:"qr"};
-          setBorrows(p=>[...p,newBr]);
-          setBooks(p=>p.map(b=>b.id===bk.id?{...b,status:"borrowed"}:b));
+          setBorrows(function(p){return[...p,newBr];});
+          setBooks(function(p){return p.map(function(b){return b.id===bk.id?Object.assign({},b,{status:"borrowed"}):b;});});
           toast("✓ "+mem.name+" 掃碼借閱《"+bk.title+"》已登記");
         }else{
           toast("⚠ 掃碼借閱帳號或書籍無法比對，請確認帳號已建立");
@@ -684,7 +684,7 @@ function App(){
       }
     };
     window.addEventListener("message",handler);
-    return()=>window.removeEventListener("message",handler);
+    return function(){window.removeEventListener("message",handler);};
   },[]);
 
   const ADM=new Set(["borrow","remind","add","import","members"]);
