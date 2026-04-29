@@ -2508,6 +2508,10 @@ function App(){
   const[rvs,setRvs]=useState([]);
   const[ratings,setRatings]=useState({});
   const[myQ,setMyQ]=useState("");
+  const[myUser,setMyUser]=useState(null);
+  const[myNameI,setMyNameI]=useState("");
+  const[myAdI,setMyAdI]=useState("");
+  const[myLoginErr,setMyLoginErr]=useState("");
   const[myTab,setMyTab]=useState("borrow");
   const[ratingEdit,setRatingEdit]=useState(null);
   const[picks,setPicks]=useState([]);
@@ -3055,28 +3059,40 @@ return(
           {/* 📋 我的紀錄 */}
           {view==="myrecord"&&(()=>{
             const bg=D("#fff","#231508"),bd=D("#FDBA74","#3A2010"),tc=D("#431407","#F0D5A5"),sc=D("#9A3412","#B09060");
-            const found=myQ.trim()?members.find(m=>m.name.includes(myQ.trim())||m.phone.includes(myQ.trim())||(m.account&&m.account.toLowerCase()===myQ.trim().toLowerCase())):null;
+            const found=myUser;
             const myBr=found?borrows.filter(b=>b.memberId===found.id):[];
             const actBr2=myBr.filter(b=>b.status==="active"||b.status==="overdue");
             const myRvs=found?rvs.filter(()=>true):[];
+            const doLogin=()=>{const nm=myNameI.trim(),ad=myAdI.trim();if(!nm||!ad){setMyLoginErr("請輸入姓名與帳號");return;}const m=members.find(x=>x.name.trim()===nm&&(x.account||"").trim().toLowerCase()===ad.toLowerCase());if(!m){setMyLoginErr("姓名或帳號不符，請重新確認");return;}setMyUser(m);setMyLoginErr("");};
+            const doLogout=()=>{setMyUser(null);setMyNameI("");setMyAdI("");setMyLoginErr("");};
             return<div style={{maxWidth:700}}>
-              <div style={{background:bg,borderRadius:11,padding:"16px 18px",border:"1px solid "+bd,marginBottom:14}}>
-                <div style={{fontFamily:"Playfair Display,serif",fontSize:14,color:tc,marginBottom:10,paddingBottom:8,borderBottom:"2px solid "+D("#FED7AA","#3A2010")}}>📋 我的借閱紀錄與預約清單</div>
-                <div style={{fontSize:11,color:sc,marginBottom:9}}>請輸入您的姓名或電話查詢您的記錄</div>
-                <div style={{display:"flex",gap:8,alignItems:"center"}}>
-                  <div style={{flex:1,position:"relative"}}>
-                    <span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:D("#C98060","#B09060"),fontSize:11,pointerEvents:"none"}}>⌕</span>
-                    <input value={myQ} onChange={e=>setMyQ(e.target.value)} placeholder="輸入姓名、帳號或電話…" style={{paddingLeft:26}}/>
+              {!found&&<div style={{background:bg,borderRadius:11,padding:"20px 22px",border:"1px solid "+bd,marginBottom:14}}>
+                <div style={{fontFamily:"Playfair Display,serif",fontSize:14,color:tc,marginBottom:10,paddingBottom:8,borderBottom:"2px solid "+D("#FED7AA","#3A2010")}}>📋 我的借閱紀錄</div>
+                <div style={{fontSize:11,color:sc,marginBottom:14}}>請輸入姓名與帳號以查看您的借閱紀錄</div>
+                <div style={{display:"flex",flexDirection:"column",gap:9,marginBottom:12}}>
+                  <div>
+                    <div style={{fontSize:11,color:tc,fontWeight:600,marginBottom:4}}>全名</div>
+                    <input value={myNameI} onChange={e=>{setMyNameI(e.target.value);setMyLoginErr("");}} onKeyDown={e=>e.key==="Enter"&&doLogin()} placeholder="例如：王大明" style={{width:"100%"}}/>
                   </div>
-                  {myQ&&<button onClick={()=>setMyQ("")} style={{padding:"5px 10px",borderRadius:6,border:"1px solid "+bd,background:"transparent",color:sc,cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>清除</button>}
+                  <div>
+                    <div style={{fontSize:11,color:tc,fontWeight:600,marginBottom:4}}>帳號</div>
+                    <input value={myAdI} onChange={e=>{setMyAdI(e.target.value);setMyLoginErr("");}} onKeyDown={e=>e.key==="Enter"&&doLogin()} placeholder="例如：wang" style={{width:"100%"}}/>
+                  </div>
                 </div>
-                {myQ&&!found&&<div style={{marginTop:8,padding:"8px 11px",background:D("#FEF3C7","#2A2000"),borderRadius:7,border:"1px solid "+D("#FCD34D","#5A4000"),fontSize:11,color:D("#92400E","#F0C060")}}>⚠ 找不到符合的會員，請確認姓名或電話是否正確</div>}
-                {found&&<div style={{marginTop:9,padding:"10px 13px",background:D("#F0FDF4","#0A2010"),borderRadius:8,border:"1px solid "+D("#86EFAC","#1A5030"),display:"flex",alignItems:"center",gap:10}}>
+                {myLoginErr&&<div style={{marginBottom:10,padding:"7px 11px",background:D("#FEF3C7","#2A2000"),borderRadius:7,border:"1px solid "+D("#FCD34D","#5A4000"),fontSize:11,color:D("#92400E","#F0C060")}}>⚠ {myLoginErr}</div>}
+                <Btn c="確認查詢" onClick={doLogin} style={{width:"100%",justifyContent:"center"}}/>
+              </div>}
+              {found&&<div style={{background:bg,borderRadius:11,padding:"16px 18px",border:"1px solid "+bd,marginBottom:14}}>
+                <div style={{fontFamily:"Playfair Display,serif",fontSize:14,color:tc,marginBottom:10,paddingBottom:8,borderBottom:"2px solid "+D("#FED7AA","#3A2010"),display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                  <span>📋 我的借閱紀錄與預約清單</span>
+                  <button onClick={doLogout} style={{fontSize:10,padding:"3px 10px",borderRadius:6,border:"1px solid "+bd,background:"transparent",color:sc,cursor:"pointer",fontFamily:"inherit"}}>⬡ 登出</button>
+                </div>
+                <div style={{padding:"10px 13px",background:D("#F0FDF4","#0A2010"),borderRadius:8,border:"1px solid "+D("#86EFAC","#1A5030"),display:"flex",alignItems:"center",gap:10}}>
                   <div style={{width:32,height:32,borderRadius:"50%",background:"#B87050",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,fontWeight:700,color:"#fff",flexShrink:0}}>{found.name[0]}</div>
-                  <div><div style={{fontSize:13,fontWeight:700,color:tc}}>{found.name}</div><div style={{fontSize:10,color:sc}}>{found.phone} · 加入日期：{found.joinDate}</div></div>
+                  <div><div style={{fontSize:13,fontWeight:700,color:tc}}>{found.name}</div><div style={{fontSize:10,color:sc}}>{found.account||""} · {found.dept||""}</div></div>
                   <div style={{marginLeft:"auto",textAlign:"right"}}><div style={{fontSize:13,fontWeight:800,color:actBr2.length>=borrowLimit?"#DC2626":"#059669"}}>{actBr2.length} / {borrowLimit}</div><div style={{fontSize:9,color:sc}}>目前借閱/上限</div></div>
-                </div>}
-              </div>
+                </div>
+              </div>}
               {found&&<>
                 <div className="tabs">
                   <button className={"tab"+(myTab==="borrow"?" on":"")} onClick={()=>setMyTab("borrow")}>借閱紀錄 ({actBr2.length} 本中)</button>
