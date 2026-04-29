@@ -2484,6 +2484,8 @@ function App(){
   const[view,setView]=useState("overview");
   const[isAdm,setIsAdm]=useState(false);
   const[showL,setShowL]=useState(false);
+  const[showODAlert,setShowODAlert]=useState(false);
+  const[odItems,setOdItems]=useState([]);
   const[pendN,setPendN]=useState(null);
   const[books,setBooks]=useState([...BK,...BK_IMPORT]);
   const[members,setMembers]=useState(MB);
@@ -2569,7 +2571,14 @@ function App(){
   const toast=msg=>{const id=Date.now();setToasts(p=>[...p,{id,msg}]);setTimeout(()=>setToasts(p=>p.filter(t=>t.id!==id)),3000);};
   const nav=id=>{if(ADM.has(id)&&!isAdm){setPendN(id);setShowL(true);}else setView(id);};
   const doLogin=()=>{
-    if(la===AID&&lp===APW){setIsAdm(true);setShowL(false);setLa("");setLp("");setLe("");if(pendN){setView(pendN);setPendN(null);}toast("✓ 管理員登入成功");}
+    if(la===AID&&lp===APW){
+      setIsAdm(true);setShowL(false);setLa("");setLp("");setLe("");
+      if(pendN){setView(pendN);setPendN(null);}
+      toast("✓ 管理員登入成功");
+      const now2=new Date();
+      const od=borrows.filter(function(b){return(b.status==="active"||b.status==="overdue")&&Math.floor((now2-new Date(b.dueDate))/86400000)>=30;});
+      if(od.length>0){setOdItems(od);setShowODAlert(true);}
+    }
     else{setLe("帳號或密碼錯誤");setLp("");}
   };
 
@@ -3557,6 +3566,32 @@ return(
             <button onClick={doLogin} style={{flex:1,padding:"8px",borderRadius:8,border:"none",cursor:"pointer",fontWeight:700,fontSize:13,background:"linear-gradient(135deg,#F5C84A,#E8960A)",color:"#3D1F00"}}>確認登入</button>
             <button onClick={()=>{setShowL(false);setPendN(null);}} style={{padding:"8px 11px",borderRadius:8,border:"1.5px solid #FDDFA8",background:"transparent",color:"#9A3412",cursor:"pointer",fontWeight:600,fontSize:12}}>取消</button>
           </div>
+        </div>
+      </div>}
+
+      {showODAlert&&<div style={{position:"fixed",inset:0,background:"rgba(80,0,0,0.82)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:500,padding:20}}>
+        <div style={{background:"#fff",borderRadius:16,padding:"22px 20px",width:460,maxWidth:"92vw",border:"2px solid #DC2626",boxShadow:"0 16px 48px rgba(150,0,0,0.35)",display:"flex",flexDirection:"column",maxHeight:"80vh"}}>
+          <div style={{textAlign:"center",marginBottom:14}}>
+            <div style={{fontSize:30,marginBottom:5}}>🚨</div>
+            <div style={{fontFamily:"Playfair Display,serif",fontSize:16,color:"#991B1B",fontWeight:700}}>逾期超過 1 個月警示</div>
+            <div style={{fontSize:11,color:"#B91C1C",marginTop:4}}>以下 <b>{odItems.length}</b> 筆借閱已逾期超過 30 天，請盡快聯絡借閱人催還</div>
+          </div>
+          <div style={{overflowY:"auto",flex:1,display:"flex",flexDirection:"column",gap:7,marginBottom:14}}>
+            {odItems.map(function(b){
+              const bk=books.find(function(x){return x.id===b.bookId;});
+              const mem=members.find(function(x){return x.id===b.memberId;});
+              const days=Math.floor((new Date()-new Date(b.dueDate))/86400000);
+              return<div key={b.id} style={{background:"#FEF2F2",borderRadius:8,padding:"9px 12px",border:"1px solid #FECACA",display:"flex",alignItems:"center",gap:10}}>
+                <div style={{width:32,height:32,borderRadius:"50%",background:"#DC2626",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,color:"#fff",flexShrink:0,lineHeight:1.1,textAlign:"center"}}>{days}<br/><span style={{fontSize:8,fontWeight:600}}>天</span></div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:12,fontWeight:700,color:"#991B1B",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{bk?bk.title:"—"}</div>
+                  <div style={{fontSize:10,color:"#B91C1C"}}>{mem?mem.name:"—"}{mem&&mem.dept?" · "+mem.dept:""} · 應還：{b.dueDate}</div>
+                </div>
+                <div style={{fontSize:11,fontWeight:800,color:"#DC2626",flexShrink:0,whiteSpace:"nowrap"}}>逾期 {days} 天</div>
+              </div>;
+            })}
+          </div>
+          <button onClick={function(){setShowODAlert(false);}} style={{width:"100%",padding:"10px",borderRadius:9,border:"none",background:"#DC2626",color:"#fff",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>已知悉，關閉提醒</button>
         </div>
       </div>}
 
