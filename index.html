@@ -417,10 +417,10 @@ const BK_IMPORT=[
   {id:378,title:"消防體能訓練",author:"杜吉生",category:"簡體中文類",isbn:"",type:"physical",status:"available",condition:"良好",addedDate:"2026-04-27",publishYear:"2023",desc:"",views:0,cover:""}
 ];
 const MB=[
-  {id:1,name:"王大明",email:"wang@fire.gov.tw",phone:"0912-345-678",joinDate:"2024-01-01"},
-  {id:2,name:"李志豪",email:"li@fire.gov.tw",phone:"0923-456-789",joinDate:"2024-01-15"},
-  {id:3,name:"張建國",email:"zhang@fire.gov.tw",phone:"0934-567-890",joinDate:"2024-02-01"},
-  {id:4,name:"陳淑芬",email:"chen@fire.gov.tw",phone:"0945-678-901",joinDate:"2024-02-10"},
+  {id:1,name:"王大明",email:"wang@fire.gov.tw",phone:"0912-345-678",joinDate:"2024-01-01",account:"wang"},
+  {id:2,name:"李志豪",email:"li@fire.gov.tw",phone:"0923-456-789",joinDate:"2024-01-15",account:"li"},
+  {id:3,name:"張建國",email:"zhang@fire.gov.tw",phone:"0934-567-890",joinDate:"2024-02-01",account:"zhang"},
+  {id:4,name:"陳淑芬",email:"chen@fire.gov.tw",phone:"0945-678-901",joinDate:"2024-02-10",account:"chen"},
 ];
 const BR0=[
   {id:1,bookId:2,memberId:1,cid:"2_1",borrowDate:"2024-03-10",dueDate:"2024-03-24",returnDate:null,status:"overdue"},
@@ -625,7 +625,7 @@ function App(){
   const[det,setDet]=useState(null);
   const[atype,setAtype]=useState("physical");
   const[nb,setNb]=useState({title:"",author:"",category:CATS[0],isbn:"",condition:"良好",desc:"",publishYear:"",cover:"",pdfData:"",ebookUrl:""});
-  const[nm,setNm]=useState({name:"",email:"",phone:""});
+  const[nm,setNm]=useState({name:"",email:"",phone:"",account:""});
   const[bf,setBf]=useState({memberId:"",bookId:"",cid:"",days:"14"});
   const[la,setLa]=useState("");
   const[lp,setLp]=useState("");
@@ -683,7 +683,7 @@ function App(){
     if(cid)setCopies(p=>({...p,[bid]:(p[bid]||[]).map(c=>c.cid===cid?{...c,status:"available"}:c)}));
     setBooks(p=>p.map(b=>b.id===bid?{...b,status:"available"}:b));toast("✓ 書目已歸還");
   };
-  const doAddMem=()=>{if(!nm.name){toast("請填寫姓名");return;}setMembers(p=>[...p,{...nm,id:Date.now(),joinDate:new Date().toISOString().slice(0,10)}]);setNm({name:"",email:"",phone:""});setModal(null);toast("✓ 新增完成");};
+  const doAddMem=()=>{if(!nm.name){toast("請填寫姓名");return;}const acc=nm.account.trim()||(nm.email?nm.email.split("@")[0]:"");setMembers(p=>[...p,{...nm,account:acc,id:Date.now(),joinDate:new Date().toISOString().slice(0,10)}]);setNm({name:"",email:"",phone:"",account:""});setModal(null);toast("✓ 新增完成");};
   const doAddBk=()=>{
     if(!nb.title){toast("請填寫書名");return;}
     const bk={...nb,id:Date.now(),type:atype,status:"available",addedDate:new Date().toISOString().slice(0,10),condition:atype==="ebook"?"—":nb.condition,views:0,cover:""};
@@ -1110,10 +1110,11 @@ function App(){
               </div>
             </div>
             <div className="tc"><table>
-            <thead><tr><th>姓名</th><th>Email</th><th>電話</th><th>加入日期</th><th>借閱中 / 上限</th></tr></thead>
+            <thead><tr><th>姓名</th><th>帳號</th><th>Email</th><th>電話</th><th>加入日期</th><th>借閱中 / 上限</th></tr></thead>
             <tbody>{members.map(m=>{const act=borrows.filter(b=>b.memberId===m.id&&(b.status==="active"||b.status==="overdue")).length;const atLimit=act>=borrowLimit;const near=act===borrowLimit-1;return(
               <tr key={m.id} style={{background:atLimit?D("#FEF2F2","#3A1010"):near?D("#FFFBEB","#2A2000"):""}}>
                 <td><div style={{display:"flex",alignItems:"center",gap:5}}><div style={{width:22,height:22,borderRadius:"50%",background:atLimit?"#DC2626":D("#FFF7ED","#2B1808"),border:"1px solid "+(atLimit?"#FECACA":D("#FDBA74","#3A2010")),display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700,color:atLimit?"#fff":D("#B87050","#D4A060")}}>{m.name[0]}</div><span style={{fontWeight:600}}>{m.name}</span></div></td>
+                <td><span style={{fontFamily:"monospace",fontSize:11,background:D("#FFF7ED","#2B1808"),color:D("#9A5A00","#D4A060"),padding:"2px 7px",borderRadius:5,border:"1px solid "+D("#FDBA74","#3A2010")}}>{m.account||"—"}</span></td>
                 <td style={{color:D("#9A3412","#B09060"),fontSize:10}}>{m.email}</td><td style={{fontSize:10}}>{m.phone}</td><td style={{fontSize:10}}>{m.joinDate}</td>
                 <td>
                   <div style={{display:"flex",alignItems:"center",gap:7}}>
@@ -1657,7 +1658,11 @@ function App(){
         <div style={{background:D("#fff","#231508"),borderRadius:13,padding:18,width:400,maxWidth:"95vw",border:"1px solid "+D("#FDBA74","#3A2010")}} onClick={e=>e.stopPropagation()}>
           <div style={{fontFamily:"Playfair Display,serif",fontSize:14,color:D("#431407","#F0D5A5"),marginBottom:9}}>新增會員</div>
           <div className="fg"><label>姓名 *</label><input placeholder="請輸入姓名" value={nm.name} onChange={e=>setNm(p=>({...p,name:e.target.value}))}/></div>
-          <div className="fg"><label>Email</label><input type="email" placeholder="email@fire.gov.tw" value={nm.email} onChange={e=>setNm(p=>({...p,email:e.target.value}))}/></div>
+          <div className="fg"><label>Email</label><input type="email" placeholder="email@fire.gov.tw" value={nm.email} onChange={e=>{const v=e.target.value;const auto=v.includes("@")?v.split("@")[0]:"";setNm(p=>({...p,email:v,account:p.account||auto}));}}/></div>
+          <div className="fg">
+            <label style={{display:"flex",alignItems:"center",gap:5}}>帳號 <span style={{fontSize:9,fontWeight:400,color:D("#9A3412","#B09060")}}>（系統登入用，預設取 Email @前）</span></label>
+            <input placeholder="如：wang" value={nm.account} onChange={e=>setNm(p=>({...p,account:e.target.value}))} style={{fontFamily:"monospace"}}/>
+          </div>
           <div className="fg"><label>電話</label><input placeholder="0912-345-678" value={nm.phone} onChange={e=>setNm(p=>({...p,phone:e.target.value}))}/></div>
           <div style={{display:"flex",gap:7,marginTop:10}}><Btn c="確認新增" onClick={doAddMem}/><Btn c="取消" v="o" onClick={()=>setModal(null)}/></div>
         </div>
