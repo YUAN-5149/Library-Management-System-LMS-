@@ -2501,6 +2501,7 @@ function App(){
   const[nb,setNb]=useState({title:"",author:"",category:CATS[0],isbn:"",condition:"良好",desc:"",publishYear:"",cover:"",pdfData:"",ebookUrl:""});
   const[nm,setNm]=useState({name:"",email:"",phone:"",account:"",dept:""});
   const[bf,setBf]=useState({memberId:"",bookId:"",cid:"",days:"14"});
+  const[bfMemQ,setBfMemQ]=useState("");
   const[la,setLa]=useState("");
   const[lp,setLp]=useState("");
   const[le,setLe]=useState("");
@@ -2596,7 +2597,7 @@ function App(){
     setBorrows(p=>[...p,{id:Date.now(),bookId:bid,memberId:parseInt(bf.memberId),cid,borrowDate:d.toISOString().slice(0,10),dueDate:due.toISOString().slice(0,10),returnDate:null,status:"active"}]);
     if(cid)setCopies(p=>({...p,[bid]:(p[bid]||[]).map(c=>c.cid===cid?{...c,status:"borrowed"}:c)}));
     if(avCp(bid).filter(c=>c.cid!==cid).length===0)setBooks(p=>p.map(b=>b.id===bid?{...b,status:"borrowed"}:b));
-    setBf({memberId:"",bookId:"",cid:"",days:"14"});setModal(null);toast("✓ 借閱登記完成");
+    setBf({memberId:"",bookId:"",cid:"",days:"14"});setBfMemQ("");setModal(null);toast("✓ 借閱登記完成");
   };
   const doRet=(id,bid,cid)=>{
     setBorrows(p=>p.map(b=>b.id===id?{...b,status:"returned",returnDate:new Date().toISOString().slice(0,10)}:b));
@@ -3498,7 +3499,7 @@ return(
               })()}
 
               <div style={{display:"flex",gap:6,marginTop:9,flexWrap:"wrap"}}>
-                {curDet.type==="physical"&&avCp(curDet.id).length>0&&<Btn c="↗ 立即借閱" onClick={()=>{setDet(null);setBf({memberId:"",bookId:String(curDet.id),cid:"",days:"14"});setModal("borrow");}}/>}
+                {curDet.type==="physical"&&avCp(curDet.id).length>0&&isAdm&&<Btn c="↗ 立即借閱" onClick={()=>{setDet(null);setBf({memberId:"",bookId:String(curDet.id),cid:"",days:"14"});setBfMemQ("");setModal("borrow");}}/>}
                 {curDet.type==="physical"&&avCp(curDet.id).length===0&&!rvs.some(r=>r.bookId===curDet.id)&&<Btn c="⏱ 預約等待" v="y" onClick={()=>{setRvs(rs=>[...rs,{id:Date.now(),bookId:curDet.id,date:new Date().toISOString().slice(0,10)}]);toast("✓ 已成功預約");setDet(null);}}/>}
                 {curDet.type==="physical"&&avCp(curDet.id).length===0&&rvs.some(r=>r.bookId===curDet.id)&&<Btn c="✓ 已預約中" disabled s={{background:"#6B7280"}}/>}
                 {curDet.type==="ebook"&&<Btn c="□ 線上閱讀" onClick={()=>{setPdfViewer(curDet);setDet(null);}}/>}
@@ -3611,10 +3612,18 @@ return(
             </select>
           </div>}
           <div className="fg"><label>選擇會員</label>
-            <select value={bf.memberId} onChange={e=>setBf(p=>({...p,memberId:e.target.value}))}>
-              <option value="">— 請選擇會員 —</option>
-              {members.map(m=>{const cnt=borrows.filter(b=>b.memberId===m.id&&(b.status==="active"||b.status==="overdue")).length;return<option key={m.id} value={m.id}>{m.name}（{m.phone}）{cnt>=borrowLimit?" ⚠ 已達上限":cnt>0?" — 借閱中 "+cnt+"/"+borrowLimit:""}</option>;})}
-            </select>
+            <div style={{display:"flex",flexDirection:"column",gap:6}}>
+              <div style={{position:"relative"}}>
+                <span style={{position:"absolute",left:8,top:"50%",transform:"translateY(-50%)",color:D("#C98060","#B09060"),fontSize:11,pointerEvents:"none"}}>⌕</span>
+                <input value={bfMemQ} onChange={e=>{setBfMemQ(e.target.value);setBf(p=>({...p,memberId:""}));}} placeholder="輸入姓名、帳號或單位搜尋…" style={{paddingLeft:24,width:"100%"}}/>
+                {bfMemQ&&<button onClick={()=>{setBfMemQ("");setBf(p=>({...p,memberId:""}));}} style={{position:"absolute",right:6,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:D("#9A3412","#B09060"),fontSize:13,lineHeight:1}}>×</button>}
+              </div>
+              <select value={bf.memberId} onChange={e=>setBf(p=>({...p,memberId:e.target.value}))}>
+                <option value="">— 請選擇會員 —</option>
+                {(bfMemQ.trim()?members.filter(m=>m.name.includes(bfMemQ.trim())||(m.account||"").toLowerCase().includes(bfMemQ.trim().toLowerCase())||(m.dept||"").includes(bfMemQ.trim())):members).map(m=>{const cnt=borrows.filter(b=>b.memberId===m.id&&(b.status==="active"||b.status==="overdue")).length;return<option key={m.id} value={m.id}>{m.name}（{m.dept||m.phone||""}）{cnt>=borrowLimit?" ⚠ 已達上限":cnt>0?" — 借閱中 "+cnt+"/"+borrowLimit:""}</option>;})}
+              </select>
+              {bf.memberId&&(()=>{const m=members.find(x=>x.id===parseInt(bf.memberId));return m?<div style={{fontSize:10,color:D("#6B3E1E","#C0906A"),padding:"3px 6px",background:D("#FFF7ED","#2B1808"),borderRadius:5,border:"1px solid "+D("#FED7AA","#3A2010")}}>✓ {m.name} · {m.account||""} · {m.dept||""}</div>:null;})()}
+            </div>
           </div>
           {bf.memberId&&(()=>{const cnt=borrows.filter(b=>b.memberId===parseInt(bf.memberId)&&(b.status==="active"||b.status==="overdue")).length;return cnt>=borrowLimit?<div style={{background:D("#FEF2F2","#3A1010"),border:"1px solid #FECACA",borderRadius:7,padding:"7px 10px",fontSize:11,color:"#DC2626",marginBottom:8}}>⚠ 此會員已借 {cnt} 本，達到上限（{borrowLimit} 本），無法新增借閱</div>:cnt>=borrowLimit-1?<div style={{background:D("#FEF3C7","#3A2A00"),border:"1px solid #FCD34D",borderRadius:7,padding:"7px 10px",fontSize:11,color:D("#92400E","#F0C060"),marginBottom:8}}>⚠ 此會員已借 {cnt}/{borrowLimit} 本，再借一本即達上限</div>:null;})()}
           <div className="fg"><label>借閱天數</label>
@@ -3622,7 +3631,7 @@ return(
               {["7","14","30","60"].map(d=><option key={d}>{d} 天</option>)}
             </select>
           </div>
-          <div style={{display:"flex",gap:7,marginTop:10}}><Btn c="確認借閱" onClick={doBorrow}/><Btn c="取消" v="o" onClick={()=>setModal(null)}/></div>
+          <div style={{display:"flex",gap:7,marginTop:10}}><Btn c="確認借閱" onClick={doBorrow}/><Btn c="取消" v="o" onClick={()=>{setBfMemQ("");setModal(null);}}/></div>
         </div>
       </div>}
 
