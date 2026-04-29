@@ -2520,6 +2520,8 @@ function App(){
   const[qrFilter,setQrFilter]=useState("all");
   const[isDark,setIsDark]=useState(false);
   const[showBorrow,setShowBorrow]=useState(false);
+  const[memberEditMode,setMemberEditMode]=useState(false);
+  const[memberEditRow,setMemberEditRow]=useState(null);
   const[sbOpen,setSbOpen]=useState(false);
   const[borrowLimit,setBorrowLimit]=useState(3);
   const[reportM,setReportM]=useState(()=>{const d=new Date();return d.toISOString().slice(0,7);});
@@ -2685,7 +2687,11 @@ function App(){
           <div style={{display:"flex",gap:6}}>
             {view==="catalog"&&isAdm&&<Btn c="＋ 新增" onClick={()=>nav("add")}/>}
             {view==="borrow"&&isAdm&&<Btn c="＋ 新增借閱" onClick={()=>setModal("borrow")}/>}
-            {view==="members"&&isAdm&&<Btn c="＋ 新增會員" onClick={()=>setModal("member")}/>}
+            {view==="members"&&isAdm&&<>
+            <Btn c={memberEditMode?"✓ 儲存修改":"✎ 編輯會員"} v={memberEditMode?"g":"o"} s={{border:"1px solid "+(memberEditMode?"#10B981":"#B87050"),color:memberEditMode?"#10B981":"#B87050"}} onClick={()=>{if(memberEditMode){setMemberEditRow(null);setMemberEditMode(false);toast("✅ 已確認修改");}else{setMemberEditMode(true);}}}/>
+            {memberEditMode&&<Btn c="✕ 取消" v="o" s={{border:"1px solid #9A3412",color:"#9A3412"}} onClick={()=>{setMemberEditRow(null);setMemberEditMode(false);}}/>}
+            <Btn c="＋ 新增會員" onClick={()=>setModal("member")}/>
+          </>}
           </div>
         </div>
 
@@ -3016,13 +3022,19 @@ function App(){
               </div>
             </div>
             <div className="tc"><table>
-            <thead><tr><th>姓名</th><th>帳號</th><th>單位</th><th>Email</th><th>電話</th><th>加入日期</th><th>借閱中 / 上限</th></tr></thead>
-            <tbody>{members.map(m=>{const act=borrows.filter(b=>b.memberId===m.id&&(b.status==="active"||b.status==="overdue")).length;const atLimit=act>=borrowLimit;const near=act===borrowLimit-1;return(
-              <tr key={m.id} style={{background:atLimit?D("#FEF2F2","#3A1010"):near?D("#FFFBEB","#2A2000"):""}}>
-                <td><div style={{display:"flex",alignItems:"center",gap:5}}><div style={{width:22,height:22,borderRadius:"50%",background:atLimit?"#DC2626":D("#FFF7ED","#2B1808"),border:"1px solid "+(atLimit?"#FECACA":D("#FDBA74","#3A2010")),display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700,color:atLimit?"#fff":D("#B87050","#D4A060")}}>{m.name[0]}</div><span style={{fontWeight:600}}>{m.name}</span></div></td>
-                <td><span style={{fontFamily:"monospace",fontSize:11,background:D("#FFF7ED","#2B1808"),color:D("#9A5A00","#D4A060"),padding:"2px 7px",borderRadius:5,border:"1px solid "+D("#FDBA74","#3A2010")}}>{m.account||"—"}</span></td>
-                <td style={{fontSize:11}}>{m.dept||"—"}</td>
-                <td style={{color:D("#9A3412","#B09060"),fontSize:10}}>{m.email}</td><td style={{fontSize:10}}>{m.phone}</td><td style={{fontSize:10}}>{m.joinDate}</td>
+            <thead><tr><th>姓名</th><th>帳號</th><th>單位</th><th>Email</th><th>電話</th><th>加入日期</th><th>借閱中 / 上限</th>{memberEditMode&&<th>操作</th>}</tr></thead>
+            <tbody>{members.map(m=>{const act=borrows.filter(b=>b.memberId===m.id&&(b.status==="active"||b.status==="overdue")).length;const atLimit=act>=borrowLimit;const near=act===borrowLimit-1;const isEditing=memberEditMode&&memberEditRow&&memberEditRow.id===m.id;const rowData=isEditing?memberEditRow:m;
+const saveField=(field,val)=>setMemberEditRow(p=>({...p,[field]:val}));
+const commitRow=()=>{setMembers(p=>p.map(x=>x.id===m.id?{...x,...memberEditRow}:x));setMemberEditRow(null);toast("✅ 已確認修改");};
+return(
+              <tr key={m.id} style={{background:isEditing?D("#FFF7ED","#2B1808"):atLimit?D("#FEF2F2","#3A1010"):near?D("#FFFBEB","#2A2000"):"",cursor:memberEditMode&&!isEditing?"pointer":"",outline:isEditing?"2px solid #B87050":"none"}} onClick={()=>{if(memberEditMode&&!isEditing)setMemberEditRow({...m});}}>
+                <td><div style={{display:"flex",alignItems:"center",gap:5}}><div style={{width:22,height:22,borderRadius:"50%",background:atLimit?"#DC2626":D("#FFF7ED","#2B1808"),border:"1px solid "+(atLimit?"#FECACA":D("#FDBA74","#3A2010")),display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700,color:atLimit?"#fff":D("#B87050","#D4A060")}}>{rowData.name[0]}</div>
+                {isEditing?<input value={rowData.name} onChange={e=>saveField("name",e.target.value)} style={{width:90,padding:"2px 5px",fontSize:11,fontWeight:600}} onKeyDown={e=>e.key==="Enter"&&commitRow()} onClick={e=>e.stopPropagation()}/>:<span style={{fontWeight:600}}>{m.name}</span>}</div></td>
+                <td>{isEditing?<input value={rowData.account||""} onChange={e=>saveField("account",e.target.value)} style={{width:75,padding:"2px 5px",fontSize:11,fontFamily:"monospace"}} onKeyDown={e=>e.key==="Enter"&&commitRow()} onClick={e=>e.stopPropagation()}/>:<span style={{fontFamily:"monospace",fontSize:11,background:D("#FFF7ED","#2B1808"),color:D("#9A5A00","#D4A060"),padding:"2px 7px",borderRadius:5,border:"1px solid "+D("#FDBA74","#3A2010")}}>{m.account||"—"}</span>}</td>
+                <td>{isEditing?<input value={rowData.dept||""} onChange={e=>saveField("dept",e.target.value)} style={{width:90,padding:"2px 5px",fontSize:11}} onKeyDown={e=>e.key==="Enter"&&commitRow()} onClick={e=>e.stopPropagation()}/>:<span style={{fontSize:11}}>{m.dept||"—"}</span>}</td>
+                <td>{isEditing?<input value={rowData.email||""} onChange={e=>saveField("email",e.target.value)} style={{width:130,padding:"2px 5px",fontSize:10}} onKeyDown={e=>e.key==="Enter"&&commitRow()} onClick={e=>e.stopPropagation()}/>:<span style={{color:D("#9A3412","#B09060"),fontSize:10}}>{m.email}</span>}</td>
+                <td>{isEditing?<input value={rowData.phone||""} onChange={e=>saveField("phone",e.target.value)} style={{width:90,padding:"2px 5px",fontSize:10}} onKeyDown={e=>e.key==="Enter"&&commitRow()} onClick={e=>e.stopPropagation()}/>:<span style={{fontSize:10}}>{m.phone}</span>}</td>
+                <td style={{fontSize:10}}>{m.joinDate}</td>
                 <td>
                   <div style={{display:"flex",alignItems:"center",gap:7}}>
                     <div style={{flex:1,height:6,background:D("#FFF3E0","#2B1808"),borderRadius:3,overflow:"hidden",minWidth:60}}>
@@ -3032,6 +3044,8 @@ function App(){
                     {atLimit&&<Tag c="已達上限" s={{background:"#FEE2E2",color:"#991B1B"}}/>}
                   </div>
                 </td>
+                {isEditing&&<td><div style={{display:"flex",gap:4}}><Btn c="✓" sm v="g" onClick={e=>{e.stopPropagation();commitRow();}}/><Btn c="✕" sm v="r" onClick={e=>{e.stopPropagation();setMemberEditRow(null);}}/></div></td>}
+                {memberEditMode&&!isEditing&&<td/>}
               </tr>
             );})}
             </tbody>
