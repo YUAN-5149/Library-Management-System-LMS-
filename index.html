@@ -2729,7 +2729,7 @@ function App(){
                   <td><Tag c={bk.condition} s={cs(bk.condition)}/></td>
                   <td>{bk.type==="physical"&&cc.total>0?<div><Tag c={cc.avail>0?"可借":"借出"} s={cc.avail>0?{background:"#D1FAE5",color:"#065F46"}:{background:"#FEE2E2",color:"#991B1B"}}/><span style={{fontSize:9,color:"#9A3412",marginLeft:3}}>{cc.avail}/{cc.total}冊</span></div>:<Tag c={bk.status==="available"?"可借閱":"借出中"} s={bk.status==="available"?{background:"#D1FAE5",color:"#065F46"}:{background:"#FEE2E2",color:"#991B1B"}}/>}</td>
                   <td style={{fontSize:11,color:"#9A3412",textAlign:"center"}}>{vm[bk.id]||0}</td>
-                  <td><div style={{display:"flex",gap:3}}><Btn c="詳情" sm v="o" s={{border:"1px solid #FDBA74",color:"#B87050"}} onClick={()=>{setDet(bk);setVm(v=>({...v,[bk.id]:(v[bk.id]||0)+1}));}}/>{isAdm&&<Btn c="編輯" sm v="o" s={{border:"1px solid #10B981",color:"#10B981"}} onClick={()=>setEditBook({...bk})}/>}<Btn c="QR" sm v="o" s={{border:"1px solid #9333EA",color:"#9333EA"}} onClick={()=>setQrBook(bk)}/>{isAdm&&<Btn c="刪" sm v="r" onClick={()=>{setBooks(p=>p.filter(b=>b.id!==bk.id));toast("書目已刪除");}}/>}</div></td>
+                  <td><div style={{display:"flex",gap:3}}><Btn c="詳情" sm v="o" s={{border:"1px solid #FDBA74",color:"#B87050"}} onClick={()=>{setDet(bk);setVm(v=>({...v,[bk.id]:(v[bk.id]||0)+1}));}}/>{isAdm&&<Btn c="編輯" sm v="o" s={{border:"1px solid #10B981",color:"#10B981"}} onClick={()=>setEditBook({...bk})}/>}{isAdm&&<Btn c="QR" sm v="o" s={{border:"1px solid #9333EA",color:"#9333EA"}} onClick={()=>setQrBook(bk)}/>}{isAdm&&<Btn c="刪" sm v="r" onClick={()=>{setBooks(p=>p.filter(b=>b.id!==bk.id));toast("書目已刪除");}}/>}</div></td>
                 </tr>
               );})}
               </tbody>
@@ -2766,7 +2766,7 @@ function App(){
               <button className={"tab"+(btab==="rvs"?" on":"")} onClick={()=>setBtab("rvs")}>預約 ({rvs.length})</button>
             </div>
             {btab!=="rvs"?<div className="tc"><table>
-              <thead><tr><th>書名</th><th>冊別</th><th>借閱人</th><th>借閱日</th><th>應還日</th><th>狀態</th><th>來源</th><th>操作</th></tr></thead>
+              <thead><tr><th>書名</th><th>冊別</th><th>借閱人</th><th>借閱日</th><th>應還日</th><th>狀態</th><th>來源</th><th>確認歸還</th></tr></thead>
               <tbody>{(brView||[]).map(b=>{const bk=gb(b.bookId),mb=gm(b.memberId),days=Math.floor((new Date(b.dueDate)-now)/86400000);return(
                 <tr key={b.id} style={{background:b.status==="overdue"?"#FEF2F2":b.status==="active"&&days<=3&&days>=0?"#FFFBEB":""}}>
                   <td><div style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer"}} onClick={()=>bk&&setDet(bk)}>{bk&&<Cover book={bk} w={17} h={23}/>}<span style={{fontWeight:600,fontSize:11,color:"#431407"}}>{bk?bk.title:"—"}</span></div></td>
@@ -2776,7 +2776,7 @@ function App(){
                   <td style={{fontSize:10,color:b.status==="overdue"?"#DC2626":days<=3&&days>=0?"#D97706":"#431407",fontWeight:days<=3||b.status==="overdue"?700:400}}>{b.dueDate}</td>
                   <td><Tag c={b.status==="returned"?"已歸還":b.status==="overdue"?"⚠逾期":"借出中"} s={b.status==="returned"?{background:"#D1FAE5",color:"#065F46"}:b.status==="overdue"?{background:"#FEF3C7",color:"#92400E"}:{background:"#FEE2E2",color:"#991B1B"}}/></td>
                   <td style={{textAlign:"center"}}>{b.source==="qr"?<span title="掃碼借閱" style={{fontSize:14}}>📷</span>:<span style={{fontSize:9,color:"#9A3412"}}>手動</span>}</td>
-                  <td>{b.status!=="returned"?<Btn c="✓" sm v="g" onClick={()=>doRet(b.id,b.bookId,b.cid)}/>:<span style={{fontSize:9,color:"#9A3412"}}>{b.returnDate}</span>}</td>
+                  <td style={{textAlign:"center"}}>{b.status!=="returned"?<button title="確認歸還" onClick={()=>doRet(b.id,b.bookId,b.cid)} style={{width:24,height:24,borderRadius:4,border:"2px solid #F97316",background:"transparent",cursor:"pointer",display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:15,fontWeight:900,color:"transparent",transition:"color 0.15s,background 0.15s",verticalAlign:"middle"}} onMouseEnter={function(e){e.currentTarget.style.color="#F97316";e.currentTarget.style.background="#FFF7ED";}} onMouseLeave={function(e){e.currentTarget.style.color="transparent";e.currentTarget.style.background="transparent";}} onMouseDown={function(e){e.currentTarget.style.color="#EA6000";e.currentTarget.style.background="#FED7AA";}}>✓</button>:<span style={{fontSize:9,color:"#9A3412"}}>{b.returnDate}</span>}</td>
                 </tr>
               );})}
               </tbody>
